@@ -183,6 +183,7 @@ select:focus-visible {
 .chip.fuente  { background: var(--hl-soft); color: var(--muted); }
 .chip.mut     { background: rgba(189,235,77,0.12); color: var(--lime); }
 .chip.tpl     { background: rgba(189,235,77,0.08); color: var(--lime-2); }
+.chip.ver     { background: var(--lime); color: #0a0a0c; font-weight: 700; }
 
 /* acto central: botones */
 .actions {

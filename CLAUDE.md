@@ -116,9 +116,16 @@ Atajos: `todas`, `ninguna`, `solo locales`. Si todos los activos fallan → cae 
 
 ## Extras implementados (§10)
 
+- **Modo ver** — para que pese más que buscar (YouTube prioriza visionado). Resuelve la
+  búsqueda a un `videoId` con frontends libres (Piped/Invidious, listas con fallback) y
+  abre `youtube.com/watch?v=ID` (reproduce de verdad). Elige resultado 1º/2º/3º/azar.
+  Resuelve en segundo plano tras cada preview (`resolverParaActual`) → el enlace está
+  listo antes de inyectar (no rompe el pop-up por gesto). Si todo falla → cae a búsqueda.
+  No se puede leer el resultado de YT (CORS) ni pinchar su pestaña (cross-origin): por eso
+  los resolutores libres. Chip lima `▶ vídeo` cuando está resuelto.
 - Modo **auto-infectar** con cuenta atrás visible en el botón (`auto ■ N`, relleno lima
   vía `--p`); **reutiliza una sola pestaña** (`target=infectar_yt`) → no spamea pestañas
-  ni lo bloquea el navegador.
+  ni lo bloquea el navegador. Brilla con modo ver: deja una secuencia reproduciéndose.
 - **Plantillas de query** (envolver término en patrones)
 - Exportar rastro a portapapeles (markdown)
 - Glitch sutil al cambiar término (respeta reduced-motion)

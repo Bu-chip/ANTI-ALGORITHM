@@ -107,6 +107,24 @@
           <div class="toggles" id="tplToggles" role="group" aria-label="plantillas"></div>
         </section>
 
+        <!-- MODO VER -->
+        <section class="panel">
+          <h2 class="panel-title">modo ver <span class="hint">— arranca un vídeo de verdad, no solo la búsqueda</span></h2>
+          <label class="fine-row check">
+            <input type="checkbox" id="modoVer"> <span>reproducir un vídeo del resultado al inyectar</span>
+          </label>
+          <label class="fine-row">
+            <span>cuál</span>
+            <select id="verPos" aria-label="qué resultado abrir">
+              <option value="0">1º resultado</option>
+              <option value="1">2º resultado</option>
+              <option value="2">3º resultado</option>
+              <option value="rand">al azar</option>
+            </select>
+          </label>
+          <p class="hint">ver pesa MUCHO más que buscar. resuelve el vídeo con frontends libres (piped/invidious); si están caídos, abre la búsqueda igual. déjalo en una pestaña con foco para que cuente el visionado.</p>
+        </section>
+
         <!-- AUTO-INFECTAR config -->
         <section class="panel">
           <h2 class="panel-title">auto-infectar <span class="hint">— déjalo solo y que machaque</span></h2>

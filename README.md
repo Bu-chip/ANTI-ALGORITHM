@@ -69,10 +69,25 @@ INFECTAR **no rompe el algoritmo**, y mentir sobre eso sería traicionar la idea
 - YouTube pondera **mucho más el tiempo de visionado** que las búsquedas. Para
   "infectar" de verdad hay que **ver**, no solo buscar.
 
-Lo que INFECTAR hace es **sembrar la duda y abrir madrigueras**: introduce señales
-que no eres tú, te empuja fuera de tu surco, y convierte la ofuscación en un gesto
-consciente. Esa tensión —entre la potencia simbólica y el límite real de la táctica—
-es parte de la pieza, no un defecto a esconder.
+### Modo ver — para que pese más
+
+Por eso existe el **modo ver**: en vez de dejarte en la página de resultados,
+resuelve la búsqueda a un vídeo concreto (1º, 2º, 3º o al azar) y abre
+`youtube.com/watch?v=…` en tu sesión, que **sí reproduce** y manda señal de
+visionado real. Combinado con **auto-infectar** (que reutiliza una pestaña), puedes
+dejarlo corriendo viendo una secuencia de cosas dispares.
+
+Cómo lo hace sin backend ni API key: no se pueden leer los resultados de YouTube
+(lo bloquea CORS) ni pinchar en su pestaña (es cross-origin), así que la búsqueda se
+resuelve a un `videoId` mediante **frontends libres** (Piped / Invidious) y se abre
+el vídeo en youtube.com. Si esos resolutores están caídos, cae a la búsqueda normal.
+
+Sigue sin ser magia: el navegador puede pausar la reproducción en pestañas en
+segundo plano, los resolutores libres van y vienen, y reutilizar una pestaña recorta
+el visionado en cada salto. Lo que INFECTAR hace es **sembrar la duda y abrir
+madrigueras**: introduce señales que no eres tú, te empuja fuera de tu surco, y
+convierte la ofuscación en un gesto consciente. Esa tensión —entre la potencia
+simbólica y el límite real de la táctica— es parte de la pieza, no un defecto a esconder.
 
 ## Linaje
 

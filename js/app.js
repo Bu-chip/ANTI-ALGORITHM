@@ -219,9 +219,50 @@
   }
   const elegirPalabra = d => clean(pick(d.slice(0, 8)).word);
 
+  // ───────────────────────── resolutor de vídeo (modo ver) ─────────────────────────
+  // No se pueden leer los resultados de YouTube (CORS) ni pinchar en su pestaña
+  // (cross-origin). Truco client-side: resolvemos la búsqueda a un videoId con
+  // frontends libres (Piped / Invidious) y abrimos youtube.com/watch?v=ID en TU
+  // sesión, que sí reproduce. Si todo falla, el que llama cae a la búsqueda normal.
+  const PIPED = ['https://pipedapi.kavin.rocks','https://pipedapi.adminforge.de',
+    'https://pipedapi.leptons.xyz','https://api.piped.private.coffee'];
+  const INVIDIOUS = ['https://yewtu.be','https://invidious.fdn.fr','https://iv.ggtyler.dev',
+    'https://invidious.nerdvpn.de'];
+  const shuffle = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(p => p[1]);
+  const watchURL = id => `https://www.youtube.com/watch?v=${id}`;
+
+  // pos: 0/1/2 (1º/2º/3º) o 'rand' (al azar entre los primeros)
+  function elegirId(ids, pos) {
+    if (!ids.length) return null;
+    if (pos === 'rand') return pick(ids.slice(0, Math.min(6, ids.length)));
+    return ids[Math.min(parseInt(pos, 10) || 0, ids.length - 1)];
+  }
+  async function resolverVideo(query, pos) {
+    // Piped: items[].url = "/watch?v=ID"
+    for (const base of shuffle(PIPED)) {
+      try {
+        const d = await getJSON(`${base}/search?q=${encodeURIComponent(query)}&filter=videos`, 6000, 0);
+        const ids = (d.items || []).map(it => (it.url || '').split('v=')[1]).filter(Boolean);
+        const id = elegirId(ids, pos);
+        if (id) return id;
+      } catch { /* instancia caída, probamos otra */ }
+    }
+    // Invidious: [].videoId
+    for (const base of shuffle(INVIDIOUS)) {
+      try {
+        const d = await getJSON(`${base}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, 6000, 0);
+        const ids = (Array.isArray(d) ? d : []).map(it => it.videoId).filter(Boolean);
+        const id = elegirId(ids, pos);
+        if (id) return id;
+      } catch { /* siguiente */ }
+    }
+    return null;
+  }
+
   // ───────────────────────── estado ─────────────────────────
   const LS = { history: 'infectar.history.v1', pool: 'infectar.pool.v1',
-               mut: 'infectar.mut.v1', tpl: 'infectar.tpl.v1', noglitch: 'infectar.noglitch' };
+               mut: 'infectar.mut.v1', tpl: 'infectar.tpl.v1', noglitch: 'infectar.noglitch',
+               modover: 'infectar.modover', verpos: 'infectar.verpos' };
 
   const state = {
     pool: store.get(LS.pool, null),   // {id:bool} — null = todas activas
@@ -233,6 +274,8 @@
     seen: [],                         // memoria de términos recientes (anti-repe)
     lastSourceId: null,               // anti-racha de fuente
     auto: false, autoEndTs: 0, autoSecs: 8, autoTimer: null,
+    modoVer: store.get(LS.modover, false), // arrancar vídeo en vez de solo buscar
+    verPos: store.get(LS.verpos, '0'),     // qué resultado: '0'/'1'/'2'/'rand'
     generating: false,
   };
   if (!state.pool) { state.pool = {}; RESERVORIOS.forEach(r => state.pool[r.id] = true); }
@@ -365,6 +408,23 @@
       c.textContent = p.txt;
       chipsEl.appendChild(c);
     });
+    if (state.modoVer) resolverParaActual(s); // deja el vídeo listo antes de inyectar
+  }
+
+  // resuelve la búsqueda actual a un vídeo y deja el enlace listo (sin bloquear el gesto)
+  async function resolverParaActual(s) {
+    s.video = null;
+    const id = await resolverVideo(s.term, state.verPos).catch(() => null);
+    if (state.current !== s) return; // el término ya cambió; descartamos
+    if (id) {
+      s.video = watchURL(id);
+      termEl.href = s.video;
+      if (!chipsEl.querySelector('.chip.ver')) {
+        const c = document.createElement('span');
+        c.className = 'chip ver'; c.textContent = '▶ vídeo';
+        chipsEl.prepend(c);
+      }
+    }
   }
 
   function setBusy(busy) {
@@ -396,7 +456,10 @@
   function infectar(reuse = false) {
     if (!state.current || !state.current.term) { recombinar(); return; }
     const s = state.current;
-    window.open(ytURL(s.term), reuse ? 'infectar_yt' : '_blank', 'noopener');
+    // modo ver: abre el vídeo resuelto (reproduce de verdad); si no hay, cae a la búsqueda
+    const url = (state.modoVer && s.video) ? s.video : ytURL(s.term);
+    if (state.modoVer && !s.video && !reuse) toast('no resolví vídeo — abro la búsqueda');
+    window.open(url, reuse ? 'infectar_yt' : '_blank', 'noopener');
     pushHistory(s);
     recombinar();
   }
@@ -631,6 +694,23 @@
     rg.addEventListener('change', () => {
       document.body.classList.toggle('no-glitch', rg.checked);
       store.set(LS.noglitch, rg.checked);
+    });
+
+    // modo ver: arrancar vídeo en vez de solo buscar
+    const mv = $('#modoVer'), vp = $('#verPos');
+    mv.checked = state.modoVer;
+    vp.value = state.verPos;
+    document.body.classList.toggle('modo-ver', state.modoVer);
+    mv.addEventListener('change', () => {
+      state.modoVer = mv.checked;
+      store.set(LS.modover, state.modoVer);
+      document.body.classList.toggle('modo-ver', state.modoVer);
+      if (state.modoVer && state.current) resolverParaActual(state.current); // resuelve ya
+    });
+    vp.addEventListener('change', () => {
+      state.verPos = vp.value;
+      store.set(LS.verpos, state.verPos);
+      if (state.modoVer && state.current) resolverParaActual(state.current);
     });
 
     // teclado
