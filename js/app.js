@@ -66,7 +66,22 @@
     'Voynich manuscript','Antikythera mechanism','Codex Seraphinianus','Dyatlov Pass','Tunguska event',
     'Hessdalen lights','Marfa lights','will-o-the-wisp','ball lightning','sprites lightning',
     'Door to Hell','Centralia fire','Movile cave','blue holes','sailing stones','fairy ring',
-    'hollow earth','tulpa','ego death','radio static art'];
+    'hollow earth','tulpa','ego death','radio static art',
+    // ── frases mirables: cosas que de verdad abren madrigueras de vídeo ──
+    'soviet animation 1970','japanese city pop 1984','amazon field recording night',
+    'abandoned observatory drone footage','tuvan throat singing live','outsider music documentary',
+    'mongolian folk metal live','dub reggae 1976 full album','italian library music',
+    'NHK documentary deep sea','BBC radiophonic workshop','musique concrète studio 1960',
+    'analog modular synth jam','no wave new york 1978','ethiopian jazz 1972',
+    'brutalist housing estate tour','北京 street food walk','tokyo rain walk 4k',
+    'soviet space program footage','vintage computer demo scene','field recording iceland glacier',
+    'gregorian chant night office','gamelan ensemble full performance','krautrock live 1973',
+    'lost soviet cartoon restored','deep sea creatures documentary','aurora borealis real time',
+    'free jazz loft session','medieval music reconstruction','industrial wasteland drone',
+    'forgotten arcade games 1983','VHS workout tape 1987','public access tv weird',
+    'analog horror found footage','bulgarian women choir live','cave diving documentary',
+    'shortwave radio at night','vintage synthesizer demonstration','desert blues mali live',
+    'antique music box mechanism','glacier calving real footage','noh theatre full play'];
 
   // caos — símbolos / glitch / errores
   const CAOS = ['⌘','░▒▓','▚▞▚','◤◥◤◥','¿¿¿','⸮','§§§','¤¤¤','glitch','404','[REDACTED]',
@@ -88,7 +103,10 @@
   const FORMATOS = ['full album','en vivo','VHS rip','DJ set','field recording','lost media',
     'found footage','cassette rip','slowed reverb','8 hours','no copyright','subtitulado',
     'documental','raw footage','1 hour','explicado','completo','remastered','bootleg','rare',
-    'unboxing','mixtape','side a','radio edit','dub version','sin cortes'];
+    'unboxing','mixtape','side a','radio edit','dub version','sin cortes',
+    // sufijos que apuntan a contenido mirable
+    'full documentary','drone footage','restored footage','rare performance','live set 1979',
+    '4k walk','archival footage','rehearsal tape','behind the scenes','tv broadcast'];
 
   // décadas (mutágeno año/década)
   const DECADAS = ['años 50','años 60','años 70','años 80','años 90','90s','80s','Y2K','2000s',
@@ -106,6 +124,9 @@
     { id: 'tpl-bad',  label: '{x} pero mal',     wrap: x => `${x} pero mal` },
     { id: 'tpl-asmr', label: '{x} asmr',         wrap: x => `${x} asmr` },
     { id: 'tpl-real', label: '{x} a las 3am',    wrap: x => `${x} a las 3am` },
+    { id: 'tpl-doc',  label: '{x} full documentary', wrap: x => `${x} full documentary` },
+    { id: 'tpl-drone', label: '{x} drone footage',   wrap: x => `${x} drone footage` },
+    { id: 'tpl-live', label: '{x} live',         wrap: x => `${x} live` },
   ];
 
   // ───────────────────────── reservorios ─────────────────────────
@@ -113,35 +134,35 @@
   // motor los envuelve en try/catch y cae a un local si hace falta.
   const RESERVORIOS = [
     // ── live ──
-    { id: 'wikipedia', label: 'wikipedia', kind: 'live', async run() {
+    { id: 'wikipedia', label: 'wikipedia', kind: 'live', weight: 5, async run() {
         const d = await getJSON(`https://${wikiLangChoice()}.wikipedia.org/api/rest_v1/page/random/summary`);
         return clean(d && d.title);
       } },
-    { id: 'wikiglobal', label: 'wiki global', kind: 'live', async run() {
+    { id: 'wikiglobal', label: 'wiki global', kind: 'live', weight: 3, async run() {
         const d = await getJSON(`https://${pick(WIKI_LANGS)}.wikipedia.org/api/rest_v1/page/random/summary`);
         return clean(d && d.title);
       } },
-    { id: 'wikcionario', label: 'wikcionario', kind: 'live', async run() {
+    { id: 'wikcionario', label: 'wikcionario', kind: 'live', weight: 2, async run() {
         const d = await getJSON(`https://${wikiLangChoice()}.wiktionary.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`);
         return clean(d?.query?.random?.[0]?.title);
       } },
-    { id: 'commons', label: 'commons', kind: 'live', async run() {
+    { id: 'commons', label: 'commons', kind: 'live', weight: 2, async run() {
         const d = await getJSON('https://commons.wikimedia.org/w/api.php?action=query&list=random&rnnamespace=6&rnlimit=1&format=json&origin=*');
         let t = d?.query?.random?.[0]?.title;
         if (!t) return null;
         return clean(t.replace(/^File:/i, '').replace(/\.[a-z0-9]{2,4}$/i, '')); // quita File: y extensión
       } },
-    { id: 'poesia', label: 'poesía', kind: 'live', async run() {
+    { id: 'poesia', label: 'poesía', kind: 'live', weight: 4, async run() {
         const d = await getJSON('https://poetrydb.org/random');
         const lineas = Array.isArray(d?.[0]?.lines) ? d[0].lines.filter(l => l && l.trim()) : [];
         return lineas.length ? clean(pick(lineas)) : null;
       } },
-    { id: 'especie', label: 'especie', kind: 'live', async run() {
+    { id: 'especie', label: 'especie', kind: 'live', weight: 4, async run() {
         const d = await getJSON(`https://api.gbif.org/v1/species/search?rank=SPECIES&status=ACCEPTED&limit=1&offset=${rnd(9000)}`);
         const r = d?.results?.[0];
         return clean(r && (r.canonicalName || r.scientificName));
       } },
-    { id: 'museo', label: 'museo', kind: 'live', async run() {
+    { id: 'museo', label: 'museo', kind: 'live', weight: 4, async run() {
         // Met Museum: ids dispersos con huecos → probamos varios y dejamos que el fallback cubra el resto
         for (let i = 0; i < 3; i++) {
           try {
@@ -154,14 +175,16 @@
       } },
 
     // ── local (nunca fallan) ──
-    { id: 'rarezas', label: 'rarezas', kind: 'local', run() { return pick(RAREZAS); } },
-    { id: 'caos', label: 'caos', kind: 'local', run() {
+    // rarezas: canon curado y mirable → es la madriguera principal, peso alto
+    { id: 'rarezas', label: 'rarezas', kind: 'local', weight: 8, run() { return pick(RAREZAS); } },
+    // ── ruido (sal, no plato principal): el dial de jugo regula su peso ──
+    { id: 'caos', label: 'caos', kind: 'local', weight: 3, noise: true, run() {
         const r = Math.random();
         if (r < 0.18) return '0x' + hex(rnd(3) + 2);
         if (r < 0.30) return 'error ' + (rnd(900) + 100);
         return pick(CAOS);
       } },
-    { id: 'coordenadas', label: 'coordenadas', kind: 'local', run() {
+    { id: 'coordenadas', label: 'coordenadas', kind: 'local', weight: 3, noise: true, run() {
         const lat = rfloat(-90, 90), lon = rfloat(-180, 180);
         if (Math.random() < 0.4) {  // formato cardinal de vez en cuando
           const ns = lat >= 0 ? 'N' : 'S', ew = lon >= 0 ? 'E' : 'W';
@@ -169,27 +192,39 @@
         }
         return `${lat.toFixed(2)} ${lon.toFixed(2)}`;
       } },
-    { id: 'efemeride', label: 'efeméride', kind: 'local', run() {
+    { id: 'efemeride', label: 'efeméride', kind: 'local', weight: 3, noise: true, run() {
         const y = 1500 + rnd(521);
         return Math.random() < 0.5 ? String(y) : `año ${y}`;
       } },
-    { id: 'catalogo', label: 'catálogo', kind: 'local', run() {
+    { id: 'catalogo', label: 'catálogo', kind: 'local', weight: 3, noise: true, run() {
         const p = pick(CAT_PREFIX);
         const n = rnd(2) ? rnd(900) + 1 : rnd(9000) + 100;
         return `${p}${/[.\-:]$/.test(p) ? '' : ' '}${n}`;
       } },
-    { id: 'emoji', label: 'emoji', kind: 'local', run() {
+    { id: 'emoji', label: 'emoji', kind: 'local', weight: 3, noise: true, run() {
         let s = ''; const n = 2 + rnd(3);
         for (let i = 0; i < n; i++) s += pick(EMOJIS);
         return s;
       } },
-    { id: 'frecuencia', label: 'frecuencia', kind: 'local', run() {
+    { id: 'frecuencia', label: 'frecuencia', kind: 'local', weight: 3, noise: true, run() {
         const r = Math.random();
         if (r < 0.4) return pick(ESTACIONES);
         if (r < 0.7) return `${1500 + rnd(28000)} kHz`;
         // grupo de cifras estilo estación de números
         let g = []; for (let i = 0; i < 5; i++) g.push(rnd(10));
         return g.join(' ');
+      } },
+
+    // ── semilla (especial): solo entra al pool si hay palabra escrita ──
+    // a veces da un salto semántico alrededor de la semilla, a veces la devuelve tal cual.
+    { id: 'semilla', label: 'semilla', kind: 'local', weight: 9, seedOnly: true, async run() {
+        const sem = seedValue();
+        if (!sem) return null;
+        if (Math.random() < 0.6) {            // la mayoría de veces, deriva alrededor
+          try { const d = await datamuse('ml', sem); const v = d && elegirPalabra(d); if (v) return v; }
+          catch { /* sin red → cae a la semilla cruda */ }
+        }
+        return sem;
       } },
   ];
 
@@ -199,6 +234,9 @@
     if (v === 'mix') return pick(['es', 'en']);
     return v;
   }
+
+  // palabra de la semilla (campo del pozo), limpia. '' si no hay.
+  const seedValue = () => clean(($('#semilla') || {}).value || '');
 
   // ───────────────────────── mutágenos ─────────────────────────
   const MUTAGENOS = [
@@ -221,12 +259,14 @@
 
   // ───────────────────────── estado ─────────────────────────
   const LS = { history: 'infectar.history.v1', pool: 'infectar.pool.v1',
-               mut: 'infectar.mut.v1', tpl: 'infectar.tpl.v1', noglitch: 'infectar.noglitch' };
+               mut: 'infectar.mut.v1', tpl: 'infectar.tpl.v1', noglitch: 'infectar.noglitch',
+               diana: 'infectar.diana.v1', jugo: 'infectar.jugo.v1', semilla: 'infectar.semilla.v1' };
 
   const state = {
     pool: store.get(LS.pool, null),   // {id:bool} — null = todas activas
     mut:  store.get(LS.mut, {}),      // {id:bool}
     tpl:  store.get(LS.tpl, {}),      // {id:bool}
+    diana: store.get(LS.diana, { youtube: true, google: false }), // dónde se lanza
     current: null,                    // muestra mostrada {term, parts, source}
     next: null,                       // Promise de la siguiente muestra (prefetch)
     history: store.get(LS.history, []),
@@ -236,11 +276,33 @@
     generating: false,
   };
   if (!state.pool) { state.pool = {}; RESERVORIOS.forEach(r => state.pool[r.id] = true); }
+  // la semilla la gobierna el campo, no un chip → siempre "encendida" en el pool
+  RESERVORIOS.filter(r => r.seedOnly).forEach(r => state.pool[r.id] = true);
 
-  const activePool = () => RESERVORIOS.filter(r => state.pool[r.id]);
-  const locales    = () => RESERVORIOS.filter(r => r.kind === 'local');
+  // disponible = activa y, si es seedOnly, con palabra escrita
+  const disponible = r => !r.seedOnly || !!seedValue();
+  const activePool = () => RESERVORIOS.filter(r => state.pool[r.id] && disponible(r));
+  const locales    = () => RESERVORIOS.filter(r => r.kind === 'local' && !r.seedOnly);
 
-  // elige reservorio evitando repetir el de la tirada anterior
+  // dial de jugo: 0 = pura madriguera (ruido casi off) … 100 = ruido a tope
+  function jugoFactor() {
+    const v = parseInt(($('#jugo') || {}).value || '25', 10);
+    return 0.04 + (v / 100) * 1.8;   // ~0.04 .. ~1.84
+  }
+  // etiqueta corta del dial para el output
+  const jugoEtiqueta = v => (+v <= 20 ? 'madriguera' : +v >= 70 ? 'ruido' : 'mezcla');
+  // peso efectivo: el ruido se escala con el dial; lo demás, peso fijo
+  const pesoEf = r => (r.weight || 1) * (r.noise ? jugoFactor() : 1);
+
+  function pickWeighted(pool) {
+    const total = pool.reduce((s, r) => s + pesoEf(r), 0);
+    if (total <= 0) return pick(pool);
+    let x = Math.random() * total;
+    for (const r of pool) { x -= pesoEf(r); if (x <= 0) return r; }
+    return pool[pool.length - 1];
+  }
+
+  // elige reservorio (ponderado) evitando repetir el de la tirada anterior
   function elegirFuente() {
     let pool = activePool();
     if (!pool.length) pool = locales();
@@ -248,7 +310,7 @@
       const sinRepe = pool.filter(r => r.id !== state.lastSourceId);
       if (sinRepe.length) pool = sinRepe;
     }
-    return pick(pool);
+    return pickWeighted(pool);
   }
 
   // ───────────────────────── generación de muestra ─────────────────────────
@@ -336,8 +398,21 @@
   function prefetchNext() { state.next = sample().catch(() => null); }
   function invalidarPrefetch() { state.next = null; }
 
+  // ───────────────────────── dianas (dónde se lanza) ─────────────────────────
+  const DIANAS = [
+    { id: 'youtube', label: 'youtube', win: 'infectar_yt',
+      url: q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}` },
+    { id: 'google',  label: 'google',  win: 'infectar_gg',
+      url: q => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
+  ];
+  const dianaById   = id => DIANAS.find(d => d.id === id) || DIANAS[0];
+  const searchURL   = (q, id = 'youtube') => dianaById(id).url(q);
+  // dianas activas (garantiza al menos una)
+  const dianasActivas = () => { const a = DIANAS.filter(d => state.diana[d.id]); return a.length ? a : [DIANAS[0]]; };
+  const dianasIds   = () => dianasActivas().map(d => d.id);
+  const dianaPrim   = ids => dianaById((ids && ids[0]) || dianasIds()[0]).id;
+
   // ───────────────────────── render ─────────────────────────
-  const ytURL = q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
 
   const termEl   = $('#term');
   const chipsEl  = $('#chips');
@@ -354,7 +429,7 @@
     recordarSeen(s.term);
     termEl.classList.remove('idle');
     termEl.textContent = s.term;
-    termEl.href = ytURL(s.term);
+    termEl.href = searchURL(s.term, dianaPrim());
     if (!document.body.classList.contains('no-glitch')) {
       termEl.classList.remove('glitch'); void termEl.offsetWidth; termEl.classList.add('glitch');
     }
@@ -391,19 +466,62 @@
     }
   }
 
+  // ───────────────────────── semilla (siembra manual) ─────────────────────────
+  // un término de un reservorio no-ruido (para "contaminar")
+  async function unTerminoRandom() {
+    const cand = RESERVORIOS.filter(r => !r.noise && !r.seedOnly && state.pool[r.id]);
+    const pool = cand.length ? cand : [RESERVORIOS.find(r => r.id === 'rarezas')];
+    for (let i = 0; i < 3; i++) {
+      const r = pick(pool);
+      try { const v = clean(await r.run()); if (v) return v; } catch { /* probamos otro */ }
+    }
+    return pick(RAREZAS);
+  }
+
+  // modo 'derivar': vecino semántico de tu palabra. 'contaminar': tu palabra + algo random.
+  async function sembrar(modo) {
+    const sem = seedValue();
+    if (!sem) { toast('escribe una palabra en la semilla'); const f = $('#semilla'); if (f) f.focus(); return; }
+    if (state.generating) return;
+    setBusy(true);
+    try {
+      let term = sem, parts;
+      if (modo === 'derivar') {
+        let v = null;
+        try { const d = await datamuse('ml', sem); v = d && elegirPalabra(d); } catch { /* sin red → cruda */ }
+        term = v || sem;
+        parts = [{ txt: sem, type: 'base' }, { txt: 'derivar', type: 'mut' }, { txt: 'semilla', type: 'fuente' }];
+      } else { // contaminar
+        const extra = await unTerminoRandom();
+        term = extra ? `${sem} ${extra}` : sem;
+        parts = [{ txt: sem, type: 'base' }];
+        if (extra) parts.push({ txt: extra, type: 'mut' });
+        parts.push({ txt: 'semilla', type: 'fuente' });
+      }
+      renderPreview({ term: clean(term), parts, source: 'semilla' });
+    } catch {
+      renderPreview({ term: sem, parts: [{ txt: sem, type: 'base' }, { txt: 'semilla', type: 'fuente' }], source: 'semilla' });
+    } finally {
+      setBusy(false);
+      prefetchNext();
+    }
+  }
+
   // ───────────────────────── inyectar ─────────────────────────
   // reuse=true reutiliza una sola pestaña (auto-infectar); false abre una nueva (manual)
   function infectar(reuse = false) {
     if (!state.current || !state.current.term) { recombinar(); return; }
     const s = state.current;
-    window.open(ytURL(s.term), reuse ? 'infectar_yt' : '_blank', 'noopener');
-    pushHistory(s);
+    const dianas = dianasActivas();
+    // una pestaña por diana; en auto (reuse) se reutiliza una ventana fija por diana
+    dianas.forEach(d => window.open(d.url(s.term), reuse ? d.win : '_blank', 'noopener'));
+    pushHistory(s, dianas.map(d => d.id));
     recombinar();
   }
 
   // ───────────────────────── descenso / historial ─────────────────────────
-  function pushHistory(s) {
-    state.history.unshift({ term: s.term, source: s.source, t: Date.now() });
+  function pushHistory(s, dianas) {
+    state.history.unshift({ term: s.term, source: s.source, t: Date.now(), dianas: dianas || dianasIds() });
     if (state.history.length > 300) state.history.length = 300;
     store.set(LS.history, state.history);
     renderHistory(true);
@@ -428,15 +546,17 @@
       const scale = Math.max(0.5, 1 - i * 0.045);
       li.style.opacity = Math.max(0.18, 1 - i * 0.07).toFixed(2);
 
+      const ids = e.dianas && e.dianas.length ? e.dianas : ['youtube'];
       const a = document.createElement('a');
       a.className = 'node-term';
-      a.href = ytURL(e.term); a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.href = searchURL(e.term, ids[0]); a.target = '_blank'; a.rel = 'noopener noreferrer';
       a.textContent = e.term;
       a.style.fontSize = (34 * scale).toFixed(1) + 'px';
 
+      const dianasTxt = ids.map(id => dianaById(id).label).join('+');
       const meta = document.createElement('div');
       meta.className = 'node-meta';
-      meta.innerHTML = `-${String(n - i).padStart(2, '0')} <span class="sep">◈</span> ${escapeHTML(e.source)} <span class="sep">◈</span> ${hhmm(e.t)}`;
+      meta.innerHTML = `-${String(n - i).padStart(2, '0')} <span class="sep">◈</span> ${escapeHTML(e.source)} <span class="sep">◈</span> ${escapeHTML(dianasTxt)} <span class="sep">◈</span> ${hhmm(e.t)}`;
 
       li.append(a, meta);
       tunnelEl.appendChild(li);
@@ -451,8 +571,9 @@
     const lines = ['# INFECTAR — rastro de la madriguera', '',
       `> ${state.history.length} inyecciones · confía en tus amigas, no en el algoritmo`, ''];
     state.history.forEach((e, i) => {
+      const ids = e.dianas && e.dianas.length ? e.dianas : ['youtube'];
       lines.push(`- \`-${String(state.history.length - i).padStart(2, '0')}\` **${e.term}** — _${e.source}_ · ${new Date(e.t).toISOString()}`);
-      lines.push(`  - ${ytURL(e.term)}`);
+      ids.forEach(id => lines.push(`  - [${dianaById(id).label}] ${searchURL(e.term, id)}`));
     });
     lines.push('', '— Queimada Circuit Records · LAB · INFECTAR');
     const md = lines.join('\n');
@@ -584,26 +705,34 @@
     b.querySelector('.mark').textContent = pressed ? '◈' : '◇';
   }
 
-  function buildToggleGroup(sel, items, stateMap, lsKey, { cls, refresh } = {}) {
+  function buildToggleGroup(sel, items, stateMap, lsKey, { cls, refresh, veto, after } = {}) {
     const wrap = $(sel); wrap.innerHTML = '';
     items.forEach(it => {
       const b = buildToggle({ id: it.id, label: it.label, pressed: !!stateMap[it.id], kind: it.kind, cls });
       b.addEventListener('click', () => {
-        stateMap[it.id] = !stateMap[it.id];
-        syncToggle(b, stateMap[it.id]);
+        const next = !stateMap[it.id];
+        if (veto && veto(it, next) === false) return;
+        stateMap[it.id] = next;
+        syncToggle(b, next);
         store.set(lsKey, stateMap);
         if (refresh) { invalidarPrefetch(); recombinar(); }
+        if (after) after(it, next);
       });
       wrap.appendChild(b);
     });
   }
 
-  // atajos del pool
+  // atajos del pool (la semilla no es un chip, se queda al margen)
   function setPool(fn) {
-    RESERVORIOS.forEach(r => state.pool[r.id] = fn(r));
+    RESERVORIOS.filter(r => !r.seedOnly).forEach(r => state.pool[r.id] = fn(r));
     $$('#poolToggles .toggle').forEach(b => syncToggle(b, !!state.pool[b.dataset.id]));
     store.set(LS.pool, state.pool);
     invalidarPrefetch();
+  }
+
+  // la diana primaria cambió → reapunta el enlace del término actual
+  function updateTermHref() {
+    if (state.current && state.current.term) termEl.href = searchURL(state.current.term, dianaPrim());
   }
 
   // ───────────────────────── eventos ─────────────────────────
@@ -624,6 +753,26 @@
     autoSecs.addEventListener('input', () => { autoOut.textContent = autoSecs.value + 's'; if (state.auto) armarAuto(); });
 
     $('#wikiLang').addEventListener('change', () => { invalidarPrefetch(); recombinar(); });
+
+    // semilla: campo + dos botones (derivar / contaminar)
+    const semInput = $('#semilla'), btnDer = $('#btnDerivar'), btnCont = $('#btnContaminar');
+    const syncSemilla = () => { const vacio = !seedValue(); btnDer.disabled = vacio; btnCont.disabled = vacio; };
+    semInput.value = store.get(LS.semilla, '') || '';
+    syncSemilla();
+    semInput.addEventListener('input', () => { store.set(LS.semilla, semInput.value); invalidarPrefetch(); syncSemilla(); });
+    semInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sembrar('derivar'); } });
+    btnDer.addEventListener('click', () => sembrar('derivar'));
+    btnCont.addEventListener('click', () => sembrar('contaminar'));
+
+    // dial de jugo (ruido ↔ madriguera)
+    const jugo = $('#jugo'), jugoOut = $('#jugoOut');
+    jugo.value = String(store.get(LS.jugo, 25));
+    jugoOut.textContent = jugoEtiqueta(jugo.value);
+    jugo.addEventListener('input', () => {
+      jugoOut.textContent = jugoEtiqueta(jugo.value);
+      store.set(LS.jugo, parseInt(jugo.value, 10));
+      invalidarPrefetch(); recombinar();
+    });
 
     const rg = $('#reduceGlitch');
     rg.checked = store.get(LS.noglitch, false);
@@ -658,9 +807,13 @@
   // ───────────────────────── init ─────────────────────────
   function init() {
     honorReducedMotion();
-    buildToggleGroup('#poolToggles', RESERVORIOS, state.pool, LS.pool);
+    buildToggleGroup('#poolToggles', RESERVORIOS.filter(r => !r.seedOnly), state.pool, LS.pool);
     buildToggleGroup('#mutToggles', MUTAGENOS, state.mut, LS.mut, { cls: 'mut', refresh: true });
     buildToggleGroup('#tplToggles', PLANTILLAS, state.tpl, LS.tpl, { cls: 'mut', refresh: true });
+    buildToggleGroup('#dianaToggles', DIANAS, state.diana, LS.diana, {
+      veto: (it, next) => { if (!next && DIANAS.filter(d => state.diana[d.id]).length <= 1) { toast('deja al menos una diana'); return false; } },
+      after: () => updateTermHref(),
+    });
     wire();
     renderHistory(false);
     updateDepth();

@@ -6,10 +6,11 @@
 > **confía en tus amigas, no en el algoritmo.**
 
 **INFECTAR** es una pequeña máquina de sabotaje del algoritmo de recomendación de
-YouTube. Genera términos de búsqueda absolutamente aleatorios y heterogéneos y los
-**inyecta** en tu YouTube ya logueado, abriendo en una pestaña nueva la búsqueda de
-cada uno. Cada inyección ensucia y diversifica las señales que el algoritmo tiene
-sobre ti: ruido deliberado en el feed, ofuscación como protesta y como juego.
+YouTube (y, si quieres, de Google). Genera términos de búsqueda aleatorios y
+heterogéneos y los **inyecta** en tu sesión ya logueada, abriendo en una pestaña
+nueva la búsqueda de cada uno. Cada inyección ensucia y diversifica las señales que
+el algoritmo tiene sobre ti: ruido deliberado en el feed, ofuscación como protesta
+y como juego.
 
 Es una pieza del **LAB** de [Queimada Circuit Records](https://queimadacircuitrecords.com),
 sello DIY de música electrónica experimental de Bilbao. Herramienta usable y gesto
@@ -29,21 +30,43 @@ político-cultural a la vez: estética de sello, anticopyright, software libre.
    Haz **scroll** para descender por ella.
 
 Atajos: `espacio` inyecta · `↻` o `r` recombina · activa **auto-infectar** para una
-infección sostenida (cuenta atrás en el botón; reutiliza una sola pestaña para no
-enterrarte en pestañas ni que lo frene el navegador).
+infección sostenida (cuenta atrás en el botón; reutiliza una sola pestaña por diana
+para no enterrarte en pestañas ni que lo frene el navegador).
+
+### Diana: dónde se lanza
+
+En el cajón eliges la **diana**: **YouTube**, **Google** o las **dos** a la vez. Cada
+inyección abre la búsqueda en cada diana activa (en auto, reutilizando una pestaña por
+cada una). El historial recuerda dónde lanzaste cada término.
+
+### Semilla: siembra tu palabra
+
+Escribe una palabra en la **semilla** y tienes dos botones:
+
+- **derivar** → vecinos semánticos de tu palabra (vía Datamuse): sale lo *relacionado*.
+- **contaminar** → tu palabra **+** un término de otro reservorio: choque de mundos.
+
+Mientras haya semilla escrita, el motor también la mezcla en el azar (y en
+auto-infectar), así que puedes sembrar un tema y dejar que machaque alrededor.
 
 ### Las fuentes (el pool)
 
 Hay **14 reservorios heterogéneos** y por defecto están **todos activos**. En cada
-inyección se elige uno al azar, así la textura cambia de golpe entre un hit y otro:
-un binomio latino, luego un verso, luego unas coordenadas, luego un título en tailandés.
+inyección se elige uno (de forma **ponderada**: las madrigueras con chicha pesan más
+que el ruido), así la textura cambia de golpe entre un hit y otro: un binomio latino,
+luego un verso, luego un documental soviético, luego un título en tailandés.
 
 - **live** (se piden por red, con fallback si fallan): Wikipedia, Wikipedia global
   (40+ idiomas), Wikcionario, Wikimedia Commons, poesía (PoetryDB), especies (GBIF),
   obras del Metropolitan Museum.
-- **local** (se generan en tu navegador, nunca fallan): rarezas curadas, caos /
-  glitch, coordenadas, efemérides, catálogos (Op., BWV, SCP-, NGC, arXiv…), emojis,
-  frecuencias / estaciones de números (UVB-76, onda corta, grupos de cifras).
+- **local** (se generan en tu navegador, nunca fallan): rarezas curadas (frases
+  mirables que abren madrigueras de vídeo), caos / glitch, coordenadas, efemérides,
+  catálogos (Op., BWV, SCP-, NGC, arXiv…), emojis, frecuencias / estaciones de números
+  (UVB-76, onda corta, grupos de cifras).
+
+El dial de **jugo** (en el cajón) regula la mezcla: de **madriguera** pura (casi nada
+de ruido) a **ruido** a tope. Por defecto sale poco ruido, para que aparezcan cosas
+guapas y mirables.
 
 El motor **precocina la siguiente muestra** en segundo plano (inyectar es instantáneo),
 no repite la misma fuente dos veces seguidas ni términos recientes, y reintenta las
@@ -56,7 +79,8 @@ rip, field recording…), **año/década**, **mash-up** (choca con otro reservor
 **deriva ×N** (saltos semánticos vía Datamuse), **antónimo** (modo
 anti-recomendador: busca lo contrario), e **idioma aleatorio** para Wikipedia.
 También hay **plantillas de query** que envuelven el término en patrones
-(`{x} explicado`, `cómo hacer {x}`, `{x} pero mal`…).
+(`{x} explicado`, `cómo hacer {x}`, `{x} pero mal`, `{x} full documentary`,
+`{x} drone footage`, `{x} live`…).
 
 ---
 

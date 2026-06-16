@@ -237,6 +237,34 @@ select:focus-visible {
   letter-spacing: 0.02em;
 }
 
+/* ░░░ SEMILLA (siembra tu palabra) ░░░ */
+.semilla-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 540px;
+}
+.semilla-input {
+  flex: 1 1 200px;
+  min-width: 0;
+  background: var(--bg);
+  color: var(--violet-br);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 14px;
+  min-height: 44px;
+}
+.semilla-input::placeholder { color: var(--dim); }
+.semilla-input:focus { border-color: var(--violet-dp); }
+.semilla-bar .mini { min-height: 44px; }
+.mini[disabled] { opacity: 0.4; cursor: not-allowed; }
+.mini[disabled]:hover { border-color: var(--line); color: var(--muted); }
+
 /* ░░░ CAJÓN PLEGABLE ░░░ */
 .drawer {
   width: 100%;

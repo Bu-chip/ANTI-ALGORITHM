@@ -56,14 +56,28 @@
     </div>
 
     <p class="microcopy">
-      <span class="lime">espacio</span> inyecta · <span class="lime">↻</span> o <span class="lime">r</span> recombina · cada inyección abre tu YouTube
+      <span class="lime">espacio</span> inyecta · <span class="lime">↻</span> o <span class="lime">r</span> recombina · cada inyección abre tu buscador
     </p>
+
+    <!-- semilla: siembra tu propia palabra -->
+    <div class="semilla-bar">
+      <input type="text" id="semilla" class="semilla-input" placeholder="siembra una palabra…"
+             autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="palabra semilla">
+      <button class="mini" id="btnDerivar" type="button" title="vecinos semánticos de tu palabra">derivar</button>
+      <button class="mini" id="btnContaminar" type="button" title="tu palabra + algo random">contaminar</button>
+    </div>
 
     <!-- cajón plegable: fuentes & mutágenos -->
     <details class="drawer" id="drawer">
       <summary><span class="sep">◈</span> fuentes &amp; mutágenos <span class="sep">◈</span></summary>
 
       <div class="drawer-body">
+        <!-- DIANA: dónde se lanza -->
+        <section class="panel">
+          <h2 class="panel-title">diana <span class="hint">— dónde se lanza cada inyección. puedes marcar las dos</span></h2>
+          <div class="toggles" id="dianaToggles" role="group" aria-label="dianas"></div>
+        </section>
+
         <!-- POOL de reservorios -->
         <section class="panel">
           <h2 class="panel-title">reservorios <span class="hint">— todas encendidas; cada tirada elige una. apaga las que te aburran</span></h2>
@@ -73,6 +87,13 @@
             <button class="mini" data-pool-local type="button">solo locales <span class="muted">(sin red)</span></button>
           </div>
           <div class="toggles" id="poolToggles" role="group" aria-label="reservorios"></div>
+          <div class="fine">
+            <label class="fine-row">
+              <span>jugo (ruido ↔ madriguera)</span>
+              <input type="range" id="jugo" min="0" max="100" value="25" step="1" aria-label="dial de jugo: cuánto ruido frente a madriguera">
+              <output id="jugoOut" class="lime mono">madriguera</output>
+            </label>
+          </div>
         </section>
 
         <!-- MUTÁGENOS -->

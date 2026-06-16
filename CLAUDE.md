@@ -60,13 +60,18 @@ La pieza respira: vacío abierto, un solo foco, caída infinita debajo.
   cajón plegable `◈ fuentes & mutágenos ◈` con los controles.
 - **EL DESCENSO**: al scrollear, los términos inyectados forman un túnel que cae
   (más pequeños y tenues con la profundidad), espina vertical verde→violeta. Cada nodo:
-  término (enlace) + meta `-NN ◈ fuente ◈ hora`. Acciones: exportar rastro (markdown al
+  término (enlace) + meta `-NN ◈ fuente ◈ diana ◈ hora`. Acciones: exportar rastro (markdown al
   portapapeles) y colapsar el pozo (borra historial, con confirmación). Persistencia
   localStorage.
 
 ## Motor de azar — pool multi-fuente (14 reservorios, TODOS activos por defecto)
 
-Cada inyección elige un reservorio al azar entre los activos → la textura cambia de golpe.
+Cada inyección elige un reservorio entre los activos → la textura cambia de golpe.
+La elección es **PONDERADA** (`weight` por reservorio + `pickWeighted`): las
+madrigueras con chicha (rarezas, wikipedia, especie, museo, poesía) pesan más que el
+ruido. Los reservorios `noise:true` (caos, emoji, frecuencia, coordenadas, catálogo,
+efeméride) se escalan con el **dial de jugo** (`#jugo`, 0..100, default 25 → poco
+ruido): a 0 casi desaparecen (madriguera pura), a 100 dominan. `jugoFactor()`/`pesoEf()`.
 
 LIVE (fetch, con try/catch + fallback):
 1. wikipedia — REST `…/page/random/summary` → `.title` (es/en)
@@ -86,8 +91,29 @@ LOCAL (generados en cliente, nunca fallan):
 13. emoji — cadena de 2-4 emojis raros
 14. frecuencia — numbers stations (UVB-76…), kHz de onda corta, grupos de 5 cifras
 
+ESPECIAL (no es un chip, lo gobierna el campo del pozo):
+15. semilla (`seedOnly:true`) — solo entra al pool si hay palabra escrita en `#semilla`.
+    `run()` async: ~60% da un salto Datamuse `ml=` alrededor de la semilla, si no la
+    devuelve cruda. Excluida de `locales()` (fallback) y saltada cuando el campo vacío.
+
 UI pool: chips toggle (activo = resalte púrpura + ◈ verde; inactivo = ◇ tenue).
 Atajos: `todas`, `ninguna`, `solo locales`. Si todos los activos fallan → cae a local.
+
+## Semilla (siembra manual + dos botones)
+
+Campo `#semilla` en el pozo + botones **derivar** (vecino semántico Datamuse `ml=`) y
+**contaminar** (semilla + término de un reservorio no-ruido). Ambos solo fijan
+`state.current` (luego espacio/infectar lanza). `sembrar(modo)` reusa `datamuse`,
+`elegirPalabra`, `renderPreview`, `prefetchNext`. Botones off si el campo vacío.
+Enter en el campo = derivar. Persistencia en `localStorage`.
+
+## Diana — dónde se lanza (youtube / google / las dos)
+
+`DIANAS` (youtube, google) + `searchURL(q, id)`. `state.diana` con toggles
+`#dianaToggles` (guard: nunca dejar las dos apagadas). `infectar()` abre una pestaña
+por diana activa; en auto reutiliza una ventana fija por diana (`infectar_yt`,
+`infectar_gg`). Cada nodo del historial guarda `dianas` y enlaza/etiqueta su diana.
+El export markdown lista la URL por diana. Cambiar diana NO invalida el prefetch.
 
 ### Conexiones / azar (mejoras del motor)
 
