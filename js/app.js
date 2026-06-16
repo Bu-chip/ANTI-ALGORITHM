@@ -138,7 +138,7 @@
         const d = await getJSON(`https://${wikiLangChoice()}.wikipedia.org/api/rest_v1/page/random/summary`);
         return clean(d && d.title);
       } },
-    { id: 'wikiglobal', label: 'wiki global', kind: 'live', weight: 3, async run() {
+    { id: 'wikiglobal', label: 'wikipedia (otros idiomas)', kind: 'live', weight: 3, async run() {
         const d = await getJSON(`https://${pick(WIKI_LANGS)}.wikipedia.org/api/rest_v1/page/random/summary`);
         return clean(d && d.title);
       } },
@@ -146,7 +146,7 @@
         const d = await getJSON(`https://${wikiLangChoice()}.wiktionary.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`);
         return clean(d?.query?.random?.[0]?.title);
       } },
-    { id: 'commons', label: 'commons', kind: 'live', weight: 2, async run() {
+    { id: 'commons', label: 'imágenes (wikimedia)', kind: 'live', weight: 2, async run() {
         const d = await getJSON('https://commons.wikimedia.org/w/api.php?action=query&list=random&rnnamespace=6&rnlimit=1&format=json&origin=*');
         let t = d?.query?.random?.[0]?.title;
         if (!t) return null;
@@ -157,12 +157,12 @@
         const lineas = Array.isArray(d?.[0]?.lines) ? d[0].lines.filter(l => l && l.trim()) : [];
         return lineas.length ? clean(pick(lineas)) : null;
       } },
-    { id: 'especie', label: 'especie', kind: 'live', weight: 4, async run() {
+    { id: 'especie', label: 'nombres de especies', kind: 'live', weight: 4, async run() {
         const d = await getJSON(`https://api.gbif.org/v1/species/search?rank=SPECIES&status=ACCEPTED&limit=1&offset=${rnd(9000)}`);
         const r = d?.results?.[0];
         return clean(r && (r.canonicalName || r.scientificName));
       } },
-    { id: 'museo', label: 'museo', kind: 'live', weight: 4, async run() {
+    { id: 'museo', label: 'obras de museo', kind: 'live', weight: 4, async run() {
         // Met Museum: ids dispersos con huecos → probamos varios y dejamos que el fallback cubra el resto
         for (let i = 0; i < 3; i++) {
           try {
@@ -176,9 +176,9 @@
 
     // ── local (nunca fallan) ──
     // rarezas: canon curado y mirable → es la madriguera principal, peso alto
-    { id: 'rarezas', label: 'rarezas', kind: 'local', weight: 8, run() { return pick(RAREZAS); } },
+    { id: 'rarezas', label: 'temas raros y curiosos', kind: 'local', weight: 8, run() { return pick(RAREZAS); } },
     // ── ruido (sal, no plato principal): el dial de jugo regula su peso ──
-    { id: 'caos', label: 'caos', kind: 'local', weight: 3, noise: true, run() {
+    { id: 'caos', label: 'símbolos y errores', kind: 'local', weight: 3, noise: true, run() {
         const r = Math.random();
         if (r < 0.18) return '0x' + hex(rnd(3) + 2);
         if (r < 0.30) return 'error ' + (rnd(900) + 100);
@@ -192,11 +192,11 @@
         }
         return `${lat.toFixed(2)} ${lon.toFixed(2)}`;
       } },
-    { id: 'efemeride', label: 'efeméride', kind: 'local', weight: 3, noise: true, run() {
+    { id: 'efemeride', label: 'un año al azar', kind: 'local', weight: 3, noise: true, run() {
         const y = 1500 + rnd(521);
         return Math.random() < 0.5 ? String(y) : `año ${y}`;
       } },
-    { id: 'catalogo', label: 'catálogo', kind: 'local', weight: 3, noise: true, run() {
+    { id: 'catalogo', label: 'códigos raros', kind: 'local', weight: 3, noise: true, run() {
         const p = pick(CAT_PREFIX);
         const n = rnd(2) ? rnd(900) + 1 : rnd(9000) + 100;
         return `${p}${/[.\-:]$/.test(p) ? '' : ' '}${n}`;
@@ -206,7 +206,7 @@
         for (let i = 0; i < n; i++) s += pick(EMOJIS);
         return s;
       } },
-    { id: 'frecuencia', label: 'frecuencia', kind: 'local', weight: 3, noise: true, run() {
+    { id: 'frecuencia', label: 'radio y números', kind: 'local', weight: 3, noise: true, run() {
         const r = Math.random();
         if (r < 0.4) return pick(ESTACIONES);
         if (r < 0.7) return `${1500 + rnd(28000)} kHz`;
@@ -217,7 +217,7 @@
 
     // ── semilla (especial): solo entra al pool si hay palabra escrita ──
     // a veces da un salto semántico alrededor de la semilla, a veces la devuelve tal cual.
-    { id: 'semilla', label: 'semilla', kind: 'local', weight: 9, seedOnly: true, async run() {
+    { id: 'semilla', label: 'tu palabra', kind: 'local', weight: 9, seedOnly: true, async run() {
         const sem = seedValue();
         if (!sem) return null;
         if (Math.random() < 0.6) {            // la mayoría de veces, deriva alrededor
@@ -240,12 +240,12 @@
 
   // ───────────────────────── mutágenos ─────────────────────────
   const MUTAGENOS = [
-    { id: 'formato', label: 'formato' },
-    { id: 'anodecada', label: 'año/década' },
-    { id: 'mashup', label: 'mash-up' },
-    { id: 'deriva', label: 'deriva ×N' },
-    { id: 'antonimo', label: 'antónimo' },
-    { id: 'idioma-random', label: 'idioma aleatorio' },
+    { id: 'formato', label: 'formato (full album, en vivo…)' },
+    { id: 'anodecada', label: 'año o década' },
+    { id: 'mashup', label: 'mezclar con otra palabra' },
+    { id: 'deriva', label: 'palabras relacionadas' },
+    { id: 'antonimo', label: 'lo contrario' },
+    { id: 'idioma-random', label: 'idioma al azar' },
   ];
 
   // Datamuse (deriva / antónimo) — devuelve lista de palabras o null
@@ -290,7 +290,7 @@
     return 0.04 + (v / 100) * 1.8;   // ~0.04 .. ~1.84
   }
   // etiqueta corta del dial para el output
-  const jugoEtiqueta = v => (+v <= 20 ? 'madriguera' : +v >= 70 ? 'ruido' : 'mezcla');
+  const jugoEtiqueta = v => (+v <= 20 ? 'con sentido' : +v >= 70 ? 'raras' : 'mezcla');
   // peso efectivo: el ruido se escala con el dial; lo demás, peso fijo
   const pesoEf = r => (r.weight || 1) * (r.noise ? jugoFactor() : 1);
 
@@ -344,7 +344,7 @@
           w = sig;
         }
         if (w && norm(w) !== norm(term)) {
-          term = w; parts = [{ txt: term, type: 'base' }, { txt: `deriva ×${n}`, type: 'mut' }];
+          term = w; parts = [{ txt: term, type: 'base' }, { txt: `relacionada ×${n}`, type: 'mut' }];
         }
       } catch { /* deriva es opcional */ }
     }
@@ -354,7 +354,7 @@
       try {
         const d = await datamuse('rel_ant', term);
         const ant = d && elegirPalabra(d);
-        if (ant) { term = ant; parts = [{ txt: term, type: 'base' }, { txt: 'antónimo', type: 'mut' }]; }
+        if (ant) { term = ant; parts = [{ txt: term, type: 'base' }, { txt: 'lo contrario', type: 'mut' }]; }
       } catch { /* opcional */ }
     }
 
@@ -445,7 +445,7 @@
   function setBusy(busy) {
     state.generating = busy;
     document.body.classList.toggle('busy', busy);
-    if (busy && !state.current) { termEl.classList.add('idle'); termEl.textContent = '·· tirando del azar'; termEl.removeAttribute('href'); }
+    if (busy && !state.current) { termEl.classList.add('idle'); termEl.textContent = 'buscando una palabra…'; termEl.removeAttribute('href'); }
   }
 
   // genera y muestra. Usa el prefetch si está listo (→ instantáneo), si no, tira en vivo.
@@ -459,7 +459,7 @@
       renderPreview(s);
     } catch {
       const b = pick(RAREZAS);
-      renderPreview({ term: b, parts: [{ txt: b, type: 'base' }, { txt: 'rarezas↩', type: 'fuente' }], source: 'rarezas↩' });
+      renderPreview({ term: b, parts: [{ txt: b, type: 'base' }, { txt: 'temas raros', type: 'fuente' }], source: 'temas raros' });
     } finally {
       setBusy(false);
       prefetchNext(); // deja lista la siguiente
@@ -481,7 +481,7 @@
   // modo 'derivar': vecino semántico de tu palabra. 'contaminar': tu palabra + algo random.
   async function sembrar(modo) {
     const sem = seedValue();
-    if (!sem) { toast('escribe una palabra en la semilla'); const f = $('#semilla'); if (f) f.focus(); return; }
+    if (!sem) { toast('escribe una palabra primero'); const f = $('#semilla'); if (f) f.focus(); return; }
     if (state.generating) return;
     setBusy(true);
     try {
@@ -490,17 +490,17 @@
         let v = null;
         try { const d = await datamuse('ml', sem); v = d && elegirPalabra(d); } catch { /* sin red → cruda */ }
         term = v || sem;
-        parts = [{ txt: sem, type: 'base' }, { txt: 'derivar', type: 'mut' }, { txt: 'semilla', type: 'fuente' }];
+        parts = [{ txt: sem, type: 'base' }, { txt: 'relacionada', type: 'mut' }, { txt: 'tu palabra', type: 'fuente' }];
       } else { // contaminar
         const extra = await unTerminoRandom();
         term = extra ? `${sem} ${extra}` : sem;
         parts = [{ txt: sem, type: 'base' }];
         if (extra) parts.push({ txt: extra, type: 'mut' });
-        parts.push({ txt: 'semilla', type: 'fuente' });
+        parts.push({ txt: 'tu palabra', type: 'fuente' });
       }
-      renderPreview({ term: clean(term), parts, source: 'semilla' });
+      renderPreview({ term: clean(term), parts, source: 'tu palabra' });
     } catch {
-      renderPreview({ term: sem, parts: [{ txt: sem, type: 'base' }, { txt: 'semilla', type: 'fuente' }], source: 'semilla' });
+      renderPreview({ term: sem, parts: [{ txt: sem, type: 'base' }, { txt: 'tu palabra', type: 'fuente' }], source: 'tu palabra' });
     } finally {
       setBusy(false);
       prefetchNext();
@@ -536,8 +536,8 @@
     const n = state.history.length;
     $('#descensoActions').hidden = n === 0;
     $('#descensoCount').textContent = n === 0
-      ? 'vacía · todavía no has soltado nada aquí abajo'
-      : `${n} ${n === 1 ? 'inyección' : 'inyecciones'} · se hunden con la profundidad`;
+      ? 'todavía no has lanzado ninguna búsqueda'
+      : `${n} ${n === 1 ? 'búsqueda lanzada' : 'búsquedas lanzadas'}`;
 
     tunnelEl.innerHTML = '';
     state.history.forEach((e, i) => {
@@ -567,9 +567,9 @@
 
   // exportar rastro → markdown al portapapeles
   async function exportar() {
-    if (!state.history.length) { toast('aún no hay rastro que llevarse'); return; }
-    const lines = ['# INFECTAR — rastro de la madriguera', '',
-      `> ${state.history.length} inyecciones · confía en tus amigas, no en el algoritmo`, ''];
+    if (!state.history.length) { toast('todavía no hay nada que exportar'); return; }
+    const lines = ['# INFECTAR — historial de búsquedas', '',
+      `> ${state.history.length} búsquedas lanzadas`, ''];
     state.history.forEach((e, i) => {
       const ids = e.dianas && e.dianas.length ? e.dianas : ['youtube'];
       lines.push(`- \`-${String(state.history.length - i).padStart(2, '0')}\` **${e.term}** — _${e.source}_ · ${new Date(e.t).toISOString()}`);
@@ -579,13 +579,13 @@
     const md = lines.join('\n');
     try {
       await navigator.clipboard.writeText(md);
-      toast('rastro al portapapeles ✓');
+      toast('lista copiada al portapapeles');
     } catch {
       const ta = document.createElement('textarea');
       ta.value = md; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); toast('rastro al portapapeles ✓'); }
-      catch { toast('no me deja copiar — mira los permisos'); }
+      try { document.execCommand('copy'); toast('lista copiada al portapapeles'); }
+      catch { toast('no se ha podido copiar; revisa los permisos del navegador'); }
       ta.remove();
     }
   }
@@ -594,16 +594,16 @@
   async function colapsar() {
     if (!state.history.length) return;
     const ok = await dialogo({
-      titulo: 'colapsar el pozo',
-      cuerpo: 'esto borra toda la madriguera. no hay vuelta atrás.',
-      si: 'colapsar', no: 'déjalo', peligro: true,
+      titulo: 'borrar el historial',
+      cuerpo: 'se va a borrar todo el historial de búsquedas. esto no se puede deshacer.',
+      si: 'borrar', no: 'cancelar', peligro: true,
     });
     if (!ok) return;
     state.history = [];
     store.set(LS.history, state.history);
     renderHistory(false);
     updateDepth();
-    toast('pozo colapsado. a empezar de cero.');
+    toast('historial borrado');
   }
 
   // ───────────────────────── auto-infectar ─────────────────────────
@@ -612,7 +612,7 @@
     const btn = $('#btnAuto');
     btn.setAttribute('aria-pressed', String(state.auto));
     if (state.auto) {
-      toast('auto on · reutiliza una pestaña, no te llena de pestañas');
+      toast('búsqueda automática activada; usa siempre la misma pestaña');
       armarAuto();
       tickAuto();
     } else {
@@ -811,7 +811,7 @@
     buildToggleGroup('#mutToggles', MUTAGENOS, state.mut, LS.mut, { cls: 'mut', refresh: true });
     buildToggleGroup('#tplToggles', PLANTILLAS, state.tpl, LS.tpl, { cls: 'mut', refresh: true });
     buildToggleGroup('#dianaToggles', DIANAS, state.diana, LS.diana, {
-      veto: (it, next) => { if (!next && DIANAS.filter(d => state.diana[d.id]).length <= 1) { toast('deja al menos una diana'); return false; } },
+      veto: (it, next) => { if (!next && DIANAS.filter(d => state.diana[d.id]).length <= 1) { toast('tienes que dejar al menos un sitio donde buscar'); return false; } },
       after: () => updateTermHref(),
     });
     wire();

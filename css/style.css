@@ -349,8 +349,8 @@ select:focus-visible {
 .toggle.mut[aria-pressed="true"] { color: var(--lime); background: rgba(189,235,77,0.1); }
 .toggle.mut[aria-pressed="true"] .mark { color: var(--lime); }
 .toggle .badge { font-size: 10px; color: var(--dim); }
-.toggle.live  .badge::before { content: "live"; }
-.toggle.local .badge::before { content: "local"; }
+.toggle.live  .badge::before { content: "internet"; }
+.toggle.local .badge::before { content: "sin internet"; }
 
 /* controles finos */
 .fine { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
@@ -539,7 +539,7 @@ body.no-glitch .node.fresh .node-term { animation: none !important; }
 /* ░░░ ESTADO DE CARGA ░░░ */
 /* puntos discretos junto al breadcrumb mientras se tira del azar */
 .breadcrumb::after {
-  content: "·· buscando";
+  content: "buscando…";
   color: var(--lime);
   opacity: 0;
   transition: opacity .2s ease;

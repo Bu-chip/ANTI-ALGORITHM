@@ -152,11 +152,18 @@ El export markdown lista la URL por diana. Cambiar diana NO invalida el prefetch
   navegador, para colapsar el pozo. Esc cancela, Enter confirma.
 - Prefetch + anti-repetición (ver sección del motor).
 
-## Voz / copy
+## Voz / copy (IMPORTANTE — decisión del dueño, jun-2026)
 
-Tono de sello, NO de manual: minúsculas, directo, callejero, sin hedging ni jerga IA.
-Ej.: «espacio inyecta», «déjalo solo y que machaque», «pozo colapsado. a empezar de
-cero.», «rastro al portapapeles ✓». Nada de «por favor», «ten en cuenta que», emojis ⚠.
+Los TEXTOS VISIBLES van en lenguaje **claro, directo y explicativo**, con palabras
+comunes y normales que entienda cualquiera. NADA de jerga del proyecto en la interfaz:
+no «inyección», «reservorio», «mutágeno», «diana», «madriguera», «pozo». En su lugar:
+«búsqueda», «fuente de palabras», «añadir a la palabra», «dónde buscar», «historial».
+Minúsculas y tono cercano sí; pero la prioridad es que se entienda, no que suene guay.
+Ej. actuales: «buscar esto», «cambiar de palabra», «historial borrado», «lista copiada
+al portapapeles», «tienes que dejar al menos un sitio donde buscar».
+
+Nota: las CLASES y los IDs del código sí conservan los nombres internos
+(`.pozo`, `.descenso`, `.tunnel`, etc.) — eso no se ve, no hace falta tocarlo.
 
 ## Estructura
 

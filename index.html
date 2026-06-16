@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>INFECTAR · QCR LAB</title>
-  <meta name="description" content="INFECTAR — máquina de sabotaje del algoritmo de recomendación de YouTube. Un experimento del LAB de Queimada Circuit Records. confía en tus amigas, no en el algoritmo.">
+  <meta name="description" content="INFECTAR es una herramienta que llena tu YouTube de búsquedas aleatorias y variadas para confundir sus recomendaciones. Del LAB de Queimada Circuit Records.">
   <meta name="theme-color" content="#0a0a0c">
   <meta name="color-scheme" content="dark">
 
   <!-- Open Graph / social -->
   <meta property="og:title" content="INFECTAR · Queimada Circuit Records">
-  <meta property="og:description" content="Contamina tu algoritmo de YouTube con ruido deliberado. Ofuscación como protesta y como juego.">
+  <meta property="og:description" content="Llena tu YouTube (o Google) de búsquedas aleatorias para confundir sus recomendaciones.">
   <meta property="og:type" content="website">
 
   <!-- Fonts: Space Mono (titulares/mono) + Space Grotesk (cuerpo/UI) -->
@@ -26,10 +26,10 @@
   <!-- ░░░ CABECERA FIJA ░░░ -->
   <header class="topbar">
     <a class="logo" href="https://queimadacircuitrecords.com" target="_blank" rel="noopener">QUEIMADA CIRCUIT RECORDS</a>
-    <div class="depth" id="depth" title="profundidad de la madriguera" aria-label="profundidad">-00</div>
+    <div class="depth" id="depth" title="búsquedas que has lanzado" aria-label="búsquedas lanzadas">-00</div>
   </header>
 
-  <!-- ░░░ EL POZO ░░░ -->
+  <!-- ░░░ ZONA PRINCIPAL ░░░ -->
   <main class="pozo" id="pozo">
     <nav class="breadcrumb" aria-label="ubicación">
       <span class="crumb">QUEIMADA</span>
@@ -37,128 +37,128 @@
       <span class="crumb">LAB</span>
       <span class="sep">◈</span>
       <span class="crumb here">Infectar</span>
-      <span class="crumb meta">· sabotaje algorítmico DIY</span>
+      <span class="crumb meta">· ensucia las recomendaciones de tu YouTube</span>
     </nav>
 
-    <!-- término gigante flotando en el vacío -->
+    <!-- palabra grande: la búsqueda que se va a lanzar -->
     <div class="termwrap">
       <a class="term" id="term" href="#" target="_blank" rel="noopener noreferrer"
-         aria-live="polite" aria-label="término actual, abre su búsqueda de YouTube">·· tirando del azar</a>
-      <!-- chips de componentes del query -->
-      <div class="chips" id="chips" aria-label="componentes del término"></div>
+         aria-live="polite" aria-label="búsqueda actual; al pulsar la abre en una pestaña nueva">buscando una palabra…</a>
+      <!-- etiquetas con las partes de la búsqueda -->
+      <div class="chips" id="chips" aria-label="partes de la búsqueda"></div>
     </div>
 
-    <!-- acto central -->
+    <!-- botones principales -->
     <div class="actions">
-      <button class="btn btn-main" id="btnInfectar" type="button">infectar</button>
-      <button class="btn btn-ghost" id="btnRecombinar" type="button" title="recombinar (otra muestra sin inyectar)" aria-label="recombinar">↻</button>
-      <button class="btn btn-ghost" id="btnAuto" type="button" aria-pressed="false" title="auto-infectar: inyecciones encadenadas">auto ▷</button>
+      <button class="btn btn-main" id="btnInfectar" type="button">buscar esto</button>
+      <button class="btn btn-ghost" id="btnRecombinar" type="button" title="cambiar de palabra (no abre nada)" aria-label="cambiar de palabra">↻</button>
+      <button class="btn btn-ghost" id="btnAuto" type="button" aria-pressed="false" title="búsqueda automática: lanza una búsqueda cada pocos segundos">auto ▷</button>
     </div>
 
     <p class="microcopy">
-      <span class="lime">espacio</span> inyecta · <span class="lime">↻</span> o <span class="lime">r</span> recombina · cada inyección abre tu buscador
+      pulsa <span class="lime">espacio</span> o «buscar esto» para abrir la búsqueda · <span class="lime">↻</span> o <span class="lime">r</span> para cambiar de palabra · cada búsqueda se abre en una pestaña nueva
     </p>
 
-    <!-- semilla: siembra tu propia palabra -->
+    <!-- escribe tu propia palabra de partida -->
     <div class="semilla-bar">
-      <input type="text" id="semilla" class="semilla-input" placeholder="siembra una palabra…"
-             autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="palabra semilla">
-      <button class="mini" id="btnDerivar" type="button" title="vecinos semánticos de tu palabra">derivar</button>
-      <button class="mini" id="btnContaminar" type="button" title="tu palabra + algo random">contaminar</button>
+      <input type="text" id="semilla" class="semilla-input" placeholder="o escribe tú una palabra"
+             autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="tu palabra de partida">
+      <button class="mini" id="btnDerivar" type="button" title="busca palabras parecidas a la tuya">parecidas</button>
+      <button class="mini" id="btnContaminar" type="button" title="tu palabra junto a otra palabra al azar">mezclar</button>
     </div>
 
-    <!-- cajón plegable: fuentes & mutágenos -->
+    <!-- panel de opciones (plegable) -->
     <details class="drawer" id="drawer">
-      <summary><span class="sep">◈</span> fuentes &amp; mutágenos <span class="sep">◈</span></summary>
+      <summary><span class="sep">◈</span> opciones <span class="sep">◈</span></summary>
 
       <div class="drawer-body">
-        <!-- DIANA: dónde se lanza -->
+        <!-- dónde buscar -->
         <section class="panel">
-          <h2 class="panel-title">diana <span class="hint">— dónde se lanza cada inyección. puedes marcar las dos</span></h2>
-          <div class="toggles" id="dianaToggles" role="group" aria-label="dianas"></div>
+          <h2 class="panel-title">dónde buscar <span class="hint">— elige YouTube, Google o las dos a la vez</span></h2>
+          <div class="toggles" id="dianaToggles" role="group" aria-label="dónde buscar"></div>
         </section>
 
-        <!-- POOL de reservorios -->
+        <!-- fuentes de palabras -->
         <section class="panel">
-          <h2 class="panel-title">reservorios <span class="hint">— todas encendidas; cada tirada elige una. apaga las que te aburran</span></h2>
+          <h2 class="panel-title">de dónde salen las palabras <span class="hint">— cada búsqueda usa una fuente al azar. desactiva las que no te interesen</span></h2>
           <div class="shortcuts">
-            <button class="mini" data-pool-all type="button">todas</button>
-            <button class="mini" data-pool-none type="button">ninguna</button>
-            <button class="mini" data-pool-local type="button">solo locales <span class="muted">(sin red)</span></button>
+            <button class="mini" data-pool-all type="button">activar todas</button>
+            <button class="mini" data-pool-none type="button">quitar todas</button>
+            <button class="mini" data-pool-local type="button">solo las que <span class="muted">no usan internet</span></button>
           </div>
-          <div class="toggles" id="poolToggles" role="group" aria-label="reservorios"></div>
+          <div class="toggles" id="poolToggles" role="group" aria-label="fuentes de palabras"></div>
           <div class="fine">
             <label class="fine-row">
-              <span>jugo (ruido ↔ madriguera)</span>
-              <input type="range" id="jugo" min="0" max="100" value="25" step="1" aria-label="dial de jugo: cuánto ruido frente a madriguera">
-              <output id="jugoOut" class="lime mono">madriguera</output>
+              <span>tipo de palabras</span>
+              <input type="range" id="jugo" min="0" max="100" value="25" step="1" aria-label="de palabras con sentido a símbolos y rarezas">
+              <output id="jugoOut" class="lime mono">con sentido</output>
             </label>
           </div>
         </section>
 
-        <!-- MUTÁGENOS -->
+        <!-- añadidos a la palabra -->
         <section class="panel">
-          <h2 class="panel-title">mutágenos <span class="hint">— deforman el término. combínalos a saco</span></h2>
-          <div class="toggles" id="mutToggles" role="group" aria-label="mutágenos"></div>
+          <h2 class="panel-title">añadir a la palabra <span class="hint">— suma cosas a la búsqueda. puedes activar varios a la vez</span></h2>
+          <div class="toggles" id="mutToggles" role="group" aria-label="añadidos a la palabra"></div>
 
-          <!-- controles finos de mutágenos -->
+          <!-- ajustes de los añadidos -->
           <div class="fine">
             <label class="fine-row">
-              <span>deriva (saltos semánticos)</span>
-              <input type="range" id="derivaN" min="1" max="3" value="1" step="1" aria-label="número de saltos de deriva">
+              <span>saltos a palabras relacionadas</span>
+              <input type="range" id="derivaN" min="1" max="3" value="1" step="1" aria-label="cuántos saltos a palabras relacionadas">
               <output id="derivaOut" class="lime mono">×1</output>
             </label>
             <label class="fine-row">
-              <span>idioma wikipedia</span>
+              <span>idioma de wikipedia</span>
               <select id="wikiLang" aria-label="idioma de wikipedia">
-                <option value="es">es</option>
-                <option value="en">en</option>
-                <option value="mix">es/en</option>
+                <option value="es">español</option>
+                <option value="en">inglés</option>
+                <option value="mix">los dos</option>
               </select>
             </label>
             <label class="fine-row check">
-              <input type="checkbox" id="reduceGlitch"> <span>sin glitch (movimiento reducido)</span>
+              <input type="checkbox" id="reduceGlitch"> <span>sin animaciones</span>
             </label>
           </div>
         </section>
 
-        <!-- PLANTILLAS -->
+        <!-- coletillas -->
         <section class="panel">
-          <h2 class="panel-title">plantillas <span class="hint">— mete el término dentro de un patrón</span></h2>
-          <div class="toggles" id="tplToggles" role="group" aria-label="plantillas"></div>
+          <h2 class="panel-title">coletillas <span class="hint">— añaden una frase a la búsqueda, por ejemplo «… explicado»</span></h2>
+          <div class="toggles" id="tplToggles" role="group" aria-label="coletillas"></div>
         </section>
 
-        <!-- AUTO-INFECTAR config -->
+        <!-- búsqueda automática -->
         <section class="panel">
-          <h2 class="panel-title">auto-infectar <span class="hint">— déjalo solo y que machaque</span></h2>
+          <h2 class="panel-title">búsqueda automática <span class="hint">— lanza búsquedas solo, una tras otra</span></h2>
           <label class="fine-row">
-            <span>cada</span>
-            <input type="range" id="autoSecs" min="3" max="30" value="8" step="1" aria-label="intervalo de auto-infección en segundos">
+            <span>una búsqueda cada</span>
+            <input type="range" id="autoSecs" min="3" max="30" value="8" step="1" aria-label="cada cuántos segundos lanza una búsqueda">
             <output id="autoOut" class="lime mono">8s</output>
           </label>
-          <p class="hint">reutiliza una sola pestaña, así no te entierra en pestañas ni lo frena el navegador.</p>
+          <p class="hint">usa siempre la misma pestaña, para no llenarte el navegador de pestañas.</p>
         </section>
       </div>
     </details>
 
-    <!-- divisor + invitación al scroll -->
+    <!-- separador + enlace al historial -->
     <div class="asciiband" aria-hidden="true">⡇⠠⡄⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀</div>
-    <a class="rabbit" href="#descenso">↓ baja por la madriguera ↓</a>
+    <a class="rabbit" href="#descenso">↓ ver el historial ↓</a>
   </main>
 
-  <!-- ░░░ EL DESCENSO ░░░ -->
-  <section class="descenso" id="descenso" aria-label="la madriguera (historial)">
+  <!-- ░░░ HISTORIAL ░░░ -->
+  <section class="descenso" id="descenso" aria-label="historial de búsquedas">
     <div class="spine" aria-hidden="true"></div>
     <header class="descenso-head">
-      <h2 class="descenso-title">la madriguera</h2>
-      <p class="descenso-sub mono" id="descensoCount">vacía — aún no has inyectado nada</p>
+      <h2 class="descenso-title">historial</h2>
+      <p class="descenso-sub mono" id="descensoCount">todavía no has lanzado ninguna búsqueda</p>
     </header>
 
     <ol class="tunnel" id="tunnel" aria-live="polite"></ol>
 
     <div class="descenso-actions" id="descensoActions" hidden>
-      <button class="btn btn-ghost" id="btnExport" type="button">exportar rastro</button>
-      <button class="btn btn-ghost danger" id="btnCollapse" type="button">colapsar el pozo</button>
+      <button class="btn btn-ghost" id="btnExport" type="button">exportar lista</button>
+      <button class="btn btn-ghost danger" id="btnCollapse" type="button">borrar historial</button>
     </div>
     <div class="asciiband dim" aria-hidden="true">█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░</div>
   </section>
@@ -171,7 +171,7 @@
       <a href="https://instagram.com/queimada.circuit.records" target="_blank" rel="noopener">⧉ Instagram</a>
       <a href="https://queimadacircuitrecords.com/anticopyright" target="_blank" rel="noopener">⧉ Anticopyright</a>
     </nav>
-    <p class="colophon mono">QUEIMADA CIRCUIT RECORDS · LAB · INFECTAR · <span class="muted">¿¿¿¿ dominio público ¿¿¿¿</span></p>
+    <p class="colophon mono">QUEIMADA CIRCUIT RECORDS · LAB · INFECTAR · <span class="muted">dominio público, copia y comparte</span></p>
   </footer>
 
   <!-- toast para feedback discreto -->
