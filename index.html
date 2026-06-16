@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>INFECTAR · QCR LAB</title>
+  <meta name="description" content="INFECTAR — máquina de sabotaje del algoritmo de recomendación de YouTube. Un experimento del LAB de Queimada Circuit Records. confía en tus amigas, no en el algoritmo.">
+  <meta name="theme-color" content="#0a0a0c">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Open Graph / social -->
+  <meta property="og:title" content="INFECTAR · Queimada Circuit Records">
+  <meta property="og:description" content="Contamina tu algoritmo de YouTube con ruido deliberado. Ofuscación como protesta y como juego.">
+  <meta property="og:type" content="website">
+
+  <!-- Fonts: Space Mono (titulares/mono) + Space Grotesk (cuerpo/UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- estilos QCR (ruta relativa: se sirve en …github.io/anti-algorithm/) -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ░░░ CABECERA FIJA ░░░ -->
+  <header class="topbar">
+    <a class="logo" href="https://queimadacircuitrecords.com" target="_blank" rel="noopener">QUEIMADA CIRCUIT RECORDS</a>
+    <div class="depth" id="depth" title="profundidad de la madriguera" aria-label="profundidad">-00</div>
+  </header>
+
+  <!-- ░░░ EL POZO ░░░ -->
+  <main class="pozo" id="pozo">
+    <nav class="breadcrumb" aria-label="ubicación">
+      <span class="crumb">QUEIMADA</span>
+      <span class="sep">◈</span>
+      <span class="crumb">LAB</span>
+      <span class="sep">◈</span>
+      <span class="crumb here">Infectar</span>
+      <span class="crumb meta">· sabotaje algorítmico DIY</span>
+    </nav>
+
+    <!-- término gigante flotando en el vacío -->
+    <div class="termwrap">
+      <a class="term" id="term" href="#" target="_blank" rel="noopener noreferrer"
+         aria-live="polite" aria-label="término actual, abre su búsqueda de YouTube">recombinando…</a>
+      <!-- chips de componentes del query -->
+      <div class="chips" id="chips" aria-label="componentes del término"></div>
+    </div>
+
+    <!-- acto central -->
+    <div class="actions">
+      <button class="btn btn-main" id="btnInfectar" type="button">infectar</button>
+      <button class="btn btn-ghost" id="btnRecombinar" type="button" title="recombinar (otra muestra sin inyectar)" aria-label="recombinar">↻</button>
+      <button class="btn btn-ghost" id="btnAuto" type="button" aria-pressed="false" title="auto-infectar: inyecciones encadenadas">auto ▷</button>
+    </div>
+
+    <p class="microcopy">
+      recombina <span class="lime">↻</span> · inyecta <span class="lime">espacio</span> · cada inyección abre tu YouTube
+    </p>
+
+    <!-- cajón plegable: fuentes & mutágenos -->
+    <details class="drawer" id="drawer">
+      <summary><span class="sep">◈</span> fuentes &amp; mutágenos <span class="sep">◈</span></summary>
+
+      <div class="drawer-body">
+        <!-- POOL de reservorios -->
+        <section class="panel">
+          <h2 class="panel-title">reservorios <span class="hint">— por defecto todas activas; cada inyección elige una al azar</span></h2>
+          <div class="shortcuts">
+            <button class="mini" data-pool-all type="button">todas</button>
+            <button class="mini" data-pool-none type="button">ninguna</button>
+            <button class="mini" data-pool-local type="button">solo locales <span class="muted">(sin red)</span></button>
+          </div>
+          <div class="toggles" id="poolToggles" role="group" aria-label="reservorios"></div>
+        </section>
+
+        <!-- MUTÁGENOS -->
+        <section class="panel">
+          <h2 class="panel-title">mutágenos <span class="hint">— recombinadores del término, combinables</span></h2>
+          <div class="toggles" id="mutToggles" role="group" aria-label="mutágenos"></div>
+
+          <!-- controles finos de mutágenos -->
+          <div class="fine">
+            <label class="fine-row">
+              <span>deriva (saltos semánticos)</span>
+              <input type="range" id="derivaN" min="1" max="3" value="1" step="1" aria-label="número de saltos de deriva">
+              <output id="derivaOut" class="lime mono">×1</output>
+            </label>
+            <label class="fine-row">
+              <span>idioma wikipedia</span>
+              <select id="wikiLang" aria-label="idioma de wikipedia">
+                <option value="es">es</option>
+                <option value="en">en</option>
+                <option value="mix">es/en</option>
+              </select>
+            </label>
+            <label class="fine-row check">
+              <input type="checkbox" id="reduceGlitch"> <span>sin glitch (movimiento reducido)</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- PLANTILLAS -->
+        <section class="panel">
+          <h2 class="panel-title">plantillas de query <span class="hint">— envuelve el término en un patrón (opcional)</span></h2>
+          <div class="toggles" id="tplToggles" role="group" aria-label="plantillas"></div>
+        </section>
+
+        <!-- AUTO-INFECTAR config -->
+        <section class="panel">
+          <h2 class="panel-title">auto-infectar <span class="hint">— infección sostenida</span></h2>
+          <label class="fine-row">
+            <span>intervalo</span>
+            <input type="range" id="autoSecs" min="3" max="30" value="8" step="1" aria-label="intervalo de auto-infección en segundos">
+            <output id="autoOut" class="lime mono">8s</output>
+          </label>
+          <p class="hint">⚠ abrirá una pestaña de YouTube en cada disparo. Tu navegador puede bloquear pop-ups encadenados.</p>
+        </section>
+      </div>
+    </details>
+
+    <!-- divisor + invitación al scroll -->
+    <div class="asciiband" aria-hidden="true">⡇⠠⡄⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀⢀⡀⢠⡀⢀⡀⢄⡀</div>
+    <a class="rabbit" href="#descenso">↓ baja por la madriguera ↓</a>
+  </main>
+
+  <!-- ░░░ EL DESCENSO ░░░ -->
+  <section class="descenso" id="descenso" aria-label="la madriguera (historial)">
+    <div class="spine" aria-hidden="true"></div>
+    <header class="descenso-head">
+      <h2 class="descenso-title">la madriguera</h2>
+      <p class="descenso-sub mono" id="descensoCount">vacía — aún no has inyectado nada</p>
+    </header>
+
+    <ol class="tunnel" id="tunnel" aria-live="polite"></ol>
+
+    <div class="descenso-actions" id="descensoActions" hidden>
+      <button class="btn btn-ghost" id="btnExport" type="button">exportar rastro</button>
+      <button class="btn btn-ghost danger" id="btnCollapse" type="button">colapsar el pozo</button>
+    </div>
+    <div class="asciiband dim" aria-hidden="true">█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░</div>
+  </section>
+
+  <!-- ░░░ FOOTER ░░░ -->
+  <footer class="footer">
+    <p class="mantra"><span class="violet">confía en tus amigas, no en el algoritmo.</span></p>
+    <nav class="footlinks">
+      <a href="https://queimada-circuit-records.bandcamp.com" target="_blank" rel="noopener">⧉ Bandcamp</a>
+      <a href="https://instagram.com/queimada.circuit.records" target="_blank" rel="noopener">⧉ Instagram</a>
+      <a href="https://queimadacircuitrecords.com/anticopyright" target="_blank" rel="noopener">⧉ Anticopyright</a>
+    </nav>
+    <p class="colophon mono">QUEIMADA CIRCUIT RECORDS · LAB · INFECTAR · <span class="muted">¿¿¿¿ dominio público ¿¿¿¿</span></p>
+  </footer>
+
+  <!-- toast para feedback discreto -->
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
