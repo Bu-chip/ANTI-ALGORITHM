@@ -28,19 +28,26 @@ político-cultural a la vez: estética de sello, anticopyright, software libre.
 5. Repite. Cada término cae en **la madriguera** (el historial-túnel de abajo).
    Haz **scroll** para descender por ella.
 
-Atajos: `espacio` inyecta · `↻` recombina · activa **auto-infectar** para una
-infección sostenida con temporizador.
+Atajos: `espacio` inyecta · `↻` o `r` recombina · activa **auto-infectar** para una
+infección sostenida (cuenta atrás en el botón; reutiliza una sola pestaña para no
+enterrarte en pestañas ni que lo frene el navegador).
 
 ### Las fuentes (el pool)
 
-Hay **12 reservorios heterogéneos** y por defecto están **todos activos**. En cada
+Hay **14 reservorios heterogéneos** y por defecto están **todos activos**. En cada
 inyección se elige uno al azar, así la textura cambia de golpe entre un hit y otro:
 un binomio latino, luego un verso, luego unas coordenadas, luego un título en tailandés.
 
 - **live** (se piden por red, con fallback si fallan): Wikipedia, Wikipedia global
-  (30+ idiomas), Wikcionario, Wikimedia Commons, poesía (PoetryDB), especies (GBIF).
+  (40+ idiomas), Wikcionario, Wikimedia Commons, poesía (PoetryDB), especies (GBIF),
+  obras del Metropolitan Museum.
 - **local** (se generan en tu navegador, nunca fallan): rarezas curadas, caos /
-  glitch, coordenadas, efemérides, catálogos (Op., BWV, SCP-, NGC…), emojis.
+  glitch, coordenadas, efemérides, catálogos (Op., BWV, SCP-, NGC, arXiv…), emojis,
+  frecuencias / estaciones de números (UVB-76, onda corta, grupos de cifras).
+
+El motor **precocina la siguiente muestra** en segundo plano (inyectar es instantáneo),
+no repite la misma fuente dos veces seguidas ni términos recientes, y reintenta las
+conexiones caídas antes de tirar de fuente local.
 
 ### Los mutágenos
 

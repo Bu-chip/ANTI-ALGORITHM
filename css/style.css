@@ -501,7 +501,82 @@ output.mono { min-width: 34px; text-align: right; }
   * { scroll-behavior: auto; }
   .term.glitch, .node.fresh .node-term { animation: none; }
   .rabbit { animation: none; }
+  .dlg-ov, .dlg { transition: none; }
+  body.busy .term.idle { animation: none; }
 }
 /* clase de bloqueo manual del glitch (toggle "sin glitch") */
 body.no-glitch .term.glitch,
 body.no-glitch .node.fresh .node-term { animation: none !important; }
+
+/* ░░░ ESTADO DE CARGA ░░░ */
+/* puntos discretos junto al breadcrumb mientras se tira del azar */
+.breadcrumb::after {
+  content: "·· buscando";
+  color: var(--lime);
+  opacity: 0;
+  transition: opacity .2s ease;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+body.busy .breadcrumb::after { opacity: 0.7; }
+body.busy .term.idle { animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.75} }
+
+/* ░░░ CUENTA ATRÁS DEL BOTÓN AUTO ░░░ */
+/* el relleno lima avanza con --p (lo fija el JS); brutal y sin texto extra */
+#btnAuto {
+  position: relative;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+#btnAuto[aria-pressed="true"] {
+  border-color: var(--lime);
+  color: var(--lime);
+  background:
+    linear-gradient(90deg, rgba(189,235,77,0.18) var(--p,0%), transparent 0);
+}
+
+/* ░░░ DIÁLOGO PROPIO (estilo QCR, sustituye al confirm del navegador) ░░░ */
+.dlg-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5,5,7,0.72);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+.dlg-ov.show { opacity: 1; }
+.dlg {
+  width: min(440px, 100%);
+  background: #101015;
+  border: 1px solid var(--violet-dp);
+  border-radius: 14px;
+  padding: 26px 24px 22px;
+  box-shadow: 0 24px 70px -20px rgba(0,0,0,0.85);
+  transform: translateY(8px) scale(0.98);
+  transition: transform .18s ease;
+}
+.dlg-ov.show .dlg { transform: translateY(0) scale(1); }
+.dlg-t {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--violet-br);
+  margin: 0 0 10px;
+  letter-spacing: 0.02em;
+}
+.dlg-b {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--txt);
+  margin: 0 0 22px;
+  line-height: 1.55;
+}
+.dlg-row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.dlg-row .btn { font-size: 14px; padding: 11px 22px; min-height: 44px; }

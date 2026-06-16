@@ -64,28 +64,39 @@ La pieza respira: vacío abierto, un solo foco, caída infinita debajo.
   portapapeles) y colapsar el pozo (borra historial, con confirmación). Persistencia
   localStorage.
 
-## Motor de azar — pool multi-fuente (12 reservorios, TODOS activos por defecto)
+## Motor de azar — pool multi-fuente (14 reservorios, TODOS activos por defecto)
 
 Cada inyección elige un reservorio al azar entre los activos → la textura cambia de golpe.
 
 LIVE (fetch, con try/catch + fallback):
 1. wikipedia — REST `…/page/random/summary` → `.title` (es/en)
-2. wiki global — igual, idioma al azar entre 30+
+2. wiki global — igual, idioma al azar entre 40+
 3. wikcionario — API `list=random rnnamespace=0`
 4. commons — `list=random rnnamespace=6`, limpiar `File:` y extensión
 5. poesía — poetrydb.org/random → línea no vacía al azar
 6. especie — api.gbif.org species/search → canonicalName (binomios latinos)
+7. museo — Met Museum `collection/v1/objects/{id}` → `.title` (id al azar, 3 intentos)
 
 LOCAL (generados en cliente, nunca fallan):
-7. rarezas — lista curada (dungeon synth, numbers stations, backrooms, plunderphonics…)
-8. caos — símbolos/glitch (⌘, ░▒▓, glitch, 404, wow signal, 0x{hex}…)
-9. coordenadas — lat lon aleatorios
-10. efeméride — año 1500..2020
-11. catálogo — prefijo (Op., BWV, SCP-, NGC, KV, HD…) + número
-12. emoji — cadena de 2-4 emojis raros
+8. rarezas — lista curada ampliada (dungeon synth, backrooms, cryptids, ciencia rara…)
+9. caos — símbolos/glitch/errores (⌘, ░▒▓, segfault, 404, 0x{hex}, error NNN…)
+10. coordenadas — lat lon aleatorios (a veces formato cardinal N/S/E/W)
+11. efeméride — año 1500..2020 (a veces «año N»)
+12. catálogo — prefijo (Op., BWV, SCP-, NGC, KV, HD, arXiv:…) + número
+13. emoji — cadena de 2-4 emojis raros
+14. frecuencia — numbers stations (UVB-76…), kHz de onda corta, grupos de 5 cifras
 
 UI pool: chips toggle (activo = resalte púrpura + ◈ verde; inactivo = ◇ tenue).
 Atajos: `todas`, `ninguna`, `solo locales`. Si todos los activos fallan → cae a local.
+
+### Conexiones / azar (mejoras del motor)
+
+- **Prefetch**: tras cada preview se cocina la SIGUIENTE muestra en segundo plano →
+  inyectar/recombinar es instantáneo. Cualquier cambio de pool/mutágeno/plantilla/idioma
+  invalida el prefetch y regenera.
+- **Reintento**: `getJSON` reintenta 1 vez con backoff ante caída de red (no ante 4xx).
+- **Anti-repetición**: no repite la misma fuente dos tiradas seguidas; memoria `seen`
+  de los últimos ~60 términos para no repetir (re-tira hasta 3 veces).
 
 ## Mutágenos (combinables, off por defecto, chip por color)
 
@@ -105,10 +116,21 @@ Atajos: `todas`, `ninguna`, `solo locales`. Si todos los activos fallan → cae 
 
 ## Extras implementados (§10)
 
-- Modo **auto-infectar** (temporizador, infección sostenida)
+- Modo **auto-infectar** con cuenta atrás visible en el botón (`auto ■ N`, relleno lima
+  vía `--p`); **reutiliza una sola pestaña** (`target=infectar_yt`) → no spamea pestañas
+  ni lo bloquea el navegador.
 - **Plantillas de query** (envolver término en patrones)
 - Exportar rastro a portapapeles (markdown)
 - Glitch sutil al cambiar término (respeta reduced-motion)
+- **Diálogo propio** estilo QCR (`dialogo()` → Promise) en vez del `confirm()` del
+  navegador, para colapsar el pozo. Esc cancela, Enter confirma.
+- Prefetch + anti-repetición (ver sección del motor).
+
+## Voz / copy
+
+Tono de sello, NO de manual: minúsculas, directo, callejero, sin hedging ni jerga IA.
+Ej.: «espacio inyecta», «déjalo solo y que machaque», «pozo colapsado. a empezar de
+cero.», «rastro al portapapeles ✓». Nada de «por favor», «ten en cuenta que», emojis ⚠.
 
 ## Estructura
 

@@ -43,7 +43,7 @@
     <!-- término gigante flotando en el vacío -->
     <div class="termwrap">
       <a class="term" id="term" href="#" target="_blank" rel="noopener noreferrer"
-         aria-live="polite" aria-label="término actual, abre su búsqueda de YouTube">recombinando…</a>
+         aria-live="polite" aria-label="término actual, abre su búsqueda de YouTube">·· tirando del azar</a>
       <!-- chips de componentes del query -->
       <div class="chips" id="chips" aria-label="componentes del término"></div>
     </div>
@@ -56,7 +56,7 @@
     </div>
 
     <p class="microcopy">
-      recombina <span class="lime">↻</span> · inyecta <span class="lime">espacio</span> · cada inyección abre tu YouTube
+      <span class="lime">espacio</span> inyecta · <span class="lime">↻</span> o <span class="lime">r</span> recombina · cada inyección abre tu YouTube
     </p>
 
     <!-- cajón plegable: fuentes & mutágenos -->
@@ -66,7 +66,7 @@
       <div class="drawer-body">
         <!-- POOL de reservorios -->
         <section class="panel">
-          <h2 class="panel-title">reservorios <span class="hint">— por defecto todas activas; cada inyección elige una al azar</span></h2>
+          <h2 class="panel-title">reservorios <span class="hint">— todas encendidas; cada tirada elige una. apaga las que te aburran</span></h2>
           <div class="shortcuts">
             <button class="mini" data-pool-all type="button">todas</button>
             <button class="mini" data-pool-none type="button">ninguna</button>
@@ -77,7 +77,7 @@
 
         <!-- MUTÁGENOS -->
         <section class="panel">
-          <h2 class="panel-title">mutágenos <span class="hint">— recombinadores del término, combinables</span></h2>
+          <h2 class="panel-title">mutágenos <span class="hint">— deforman el término. combínalos a saco</span></h2>
           <div class="toggles" id="mutToggles" role="group" aria-label="mutágenos"></div>
 
           <!-- controles finos de mutágenos -->
@@ -103,19 +103,19 @@
 
         <!-- PLANTILLAS -->
         <section class="panel">
-          <h2 class="panel-title">plantillas de query <span class="hint">— envuelve el término en un patrón (opcional)</span></h2>
+          <h2 class="panel-title">plantillas <span class="hint">— mete el término dentro de un patrón</span></h2>
           <div class="toggles" id="tplToggles" role="group" aria-label="plantillas"></div>
         </section>
 
         <!-- AUTO-INFECTAR config -->
         <section class="panel">
-          <h2 class="panel-title">auto-infectar <span class="hint">— infección sostenida</span></h2>
+          <h2 class="panel-title">auto-infectar <span class="hint">— déjalo solo y que machaque</span></h2>
           <label class="fine-row">
-            <span>intervalo</span>
+            <span>cada</span>
             <input type="range" id="autoSecs" min="3" max="30" value="8" step="1" aria-label="intervalo de auto-infección en segundos">
             <output id="autoOut" class="lime mono">8s</output>
           </label>
-          <p class="hint">⚠ abrirá una pestaña de YouTube en cada disparo. Tu navegador puede bloquear pop-ups encadenados.</p>
+          <p class="hint">reutiliza una sola pestaña, así no te entierra en pestañas ni lo frena el navegador.</p>
         </section>
       </div>
     </details>
