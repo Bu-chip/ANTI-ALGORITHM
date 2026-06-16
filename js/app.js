@@ -9,21 +9,30 @@
   // ───────────────────────── utilidades base ─────────────────────────
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const rnd   = n => Math.floor(Math.random() * n);          // 0..n-1
-  const pick  = arr => arr[rnd(arr.length)];                 // elemento al azar
+  const rnd    = n => Math.floor(Math.random() * n);          // 0..n-1
+  const pick   = arr => arr[rnd(arr.length)];                 // elemento al azar
   const rfloat = (a, b) => Math.random() * (b - a) + a;
-  const hex   = n => Math.floor(Math.random() * Math.pow(16, n)).toString(16).padStart(n, '0');
-  const clean = s => (s || '').replace(/\s+/g, ' ').replace(/[_]/g, ' ').trim();
+  const hex    = n => Math.floor(Math.random() * Math.pow(16, n)).toString(16).padStart(n, '0');
+  const norm   = s => (s || '').toLowerCase().trim();
+  const clean  = s => (s || '').replace(/\s+/g, ' ').replace(/[_]/g, ' ').trim();
 
-  // fetch con timeout para que ningún reservorio cuelgue la experiencia
-  async function getJSON(url, ms = 7000) {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), ms);
-    try {
-      const r = await fetch(url, { signal: ctrl.signal, headers: { 'Accept': 'application/json' } });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return await r.json();
-    } finally { clearTimeout(t); }
+  // fetch con timeout + un reintento con backoff (solo ante caída de red, no ante 4xx)
+  async function getJSON(url, ms = 7000, retries = 1) {
+    for (let intento = 0; ; intento++) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), ms);
+      try {
+        const r = await fetch(url, { signal: ctrl.signal, headers: { 'Accept': 'application/json' } });
+        if (!r.ok) {
+          const e = new Error('HTTP ' + r.status); e.http = r.status; throw e;
+        }
+        return await r.json();
+      } catch (e) {
+        // 4xx/5xx no se reintentan; abortos/red sí, con un respiro
+        if (intento >= retries || e.http) throw e;
+        await new Promise(res => setTimeout(res, 350 * (intento + 1)));
+      } finally { clearTimeout(t); }
+    }
   }
 
   // localStorage robusto (sandboxes pueden bloquearlo)
@@ -33,50 +42,70 @@
   };
 
   // ───────────────────────── datos locales ─────────────────────────
-  // 30+ idiomas para "wiki global"
+  // idiomas para "wiki global" (40+)
   const WIKI_LANGS = ['es','en','fr','de','it','pt','nl','sv','pl','ja','ko','zh',
     'ru','ar','fa','he','hi','th','vi','el','la','eo','tr','fi','cs','uk','id','ro',
-    'hu','da','no','ca','eu','gl','is','ka','bn','ta'];
+    'hu','da','no','ca','eu','gl','is','ka','bn','ta','mn','my','am','si','km'];
 
-  // 7. rarezas — canon curado (ampliable)
-  const RAREZAS = ['dungeon synth','numbers stations','backrooms','liminal spaces',
-    'sperm whale codas','plunderphonics','microtonal','quorum sensing',
-    'dead mall walkthrough','Bronze Age collapse','xenharmonic 31-TET',
-    'kosmische musik','analog horror','dark DNA','umwelt von uexküll','conet project',
-    'shortwave numbers','musique concrète','hauntology','breakcore','onkyo',
-    'EVP recordings','hollow earth','tulpa','ego death','mycelium network',
-    'brutalist architecture','vaporwave plaza','deep time','radio static art'];
+  // rarezas — canon curado: música rara + saber raro + folklore de internet
+  const RAREZAS = [
+    // textura sonora
+    'dungeon synth','plunderphonics','musique concrète','hauntology','breakcore','onkyo',
+    'kosmische musik','xenharmonic 31-TET','microtonal','just intonation','no-input mixing',
+    'circuit bending','data bending','granular synthesis','harsh noise wall','power electronics',
+    'death industrial','witch house','footwork','gqom','drone metal','sea shanty','murder ballad',
+    'sacred harp','overtone singing','khoomei','gamelan','mbira','duduk','shakuhachi','tape loops',
+    'shepard tone','vaporwave plaza','conet project','EVP recordings','shortwave numbers',
+    // saber raro / ciencia
+    'sperm whale codas','quorum sensing','mycelium network','slime mold maze','tardigrade',
+    'immortal jellyfish','octopus dreaming','crow funerals','whale fall','bioluminescence',
+    'umwelt von uexküll','dark DNA','deep time','Bronze Age collapse','Kardashev scale',
+    'Dyson sphere','Oort cloud','Boltzmann brain','Fermi paradox','grey goo','infrasound',
+    // folklore / lugares / internet
+    'backrooms','liminal spaces','analog horror','dead mall walkthrough','brutalist architecture',
+    'Voynich manuscript','Antikythera mechanism','Codex Seraphinianus','Dyatlov Pass','Tunguska event',
+    'Hessdalen lights','Marfa lights','will-o-the-wisp','ball lightning','sprites lightning',
+    'Door to Hell','Centralia fire','Movile cave','blue holes','sailing stones','fairy ring',
+    'hollow earth','tulpa','ego death','radio static art'];
 
-  // 8. caos — símbolos/glitch
-  const CAOS = ['⌘','░▒▓','¿¿¿','glitch','404','feedback loop','spores','contagion',
-    '🜂','🝛','wow signal','dial-up','static','signal jamming','null','void','▚▞▚',
-    'corrupted','phantom','interference'];
+  // caos — símbolos / glitch / errores
+  const CAOS = ['⌘','░▒▓','▚▞▚','◤◥◤◥','¿¿¿','⸮','§§§','¤¤¤','glitch','404','[REDACTED]',
+    'NaN','undefined','null','void','segfault','kernel panic','blue screen','heisenbug',
+    'race condition','buffer overflow','feedback loop','signal jamming','no carrier','dial-up',
+    'white noise','pink noise','brown noise','PRBS','spores','contagion','phantom','corrupted',
+    '̸b̸r̸o̸k̸e̸n̸','ʇxǝʇ','wow signal','🜂','🝛'];
 
-  // 12. emojis raros/neutros
+  // emojis raros / neutros
   const EMOJIS = ['🜂','🝛','☣','⚗','🧫','🛰','📼','🗿','🕳','🪐','📡','🦴','🧿','🛸',
-    '🜔','♅','⛓','🪬','🧬','🩻','📟','🪤','🜍','⌖'];
+    '🜔','♅','⛓','🪬','🧬','🩻','📟','🪤','🜍','⌖','☉','♆','⚕','🜏'];
+
+  // estaciones de números / radio (reservorio "frecuencia")
+  const ESTACIONES = ['UVB-76','The Buzzer','Lincolnshire Poacher','Swedish Rhapsody',
+    'Yosemite Sam','Cherry Ripe','Magnetic Fields','Gong Station','XPA','E11','HM01','S28',
+    'The Pip','The Squeaky Wheel','M12','V07','Backwards Music Station'];
 
   // formatos (mutágeno "formato")
-  const FORMATOS = ['full album','en vivo','VHS rip','DJ set','field recording',
-    'lost media','found footage','cassette rip','slowed reverb','8 hours',
-    'no copyright','subtitulado','documental','raw footage','1 hour','explicado',
-    'completo','remastered','bootleg','rare','unboxing','tutorial','mixtape'];
+  const FORMATOS = ['full album','en vivo','VHS rip','DJ set','field recording','lost media',
+    'found footage','cassette rip','slowed reverb','8 hours','no copyright','subtitulado',
+    'documental','raw footage','1 hour','explicado','completo','remastered','bootleg','rare',
+    'unboxing','mixtape','side a','radio edit','dub version','sin cortes'];
 
   // décadas (mutágeno año/década)
-  const DECADAS = ['años 50','años 60','años 70','años 80','años 90','90s','80s',
-    'Y2K','2000s','años 2010','siglo XIX','medieval','prehistórico'];
+  const DECADAS = ['años 50','años 60','años 70','años 80','años 90','90s','80s','Y2K','2000s',
+    'años 2010','siglo XIX','medieval','prehistórico','futuro'];
 
-  // catálogos (reservorio 11)
-  const CAT_PREFIX = ['Op.','BWV','K.','SCP-','M','NGC','KV','HD','cat.','fragment',
-    'RV','Hob.','D.','WoO','IC','PSR','HIP'];
+  // catálogos (reservorio "catálogo")
+  const CAT_PREFIX = ['Op.','BWV','K.','SCP-','M','NGC','KV','HD','cat.','fragment','RV','Hob.',
+    'D.','WoO','IC','PSR','HIP','TYC','2MASS','Gliese','Messier','arXiv:'];
 
   // plantillas de query (envuelven el término)
   const PLANTILLAS = [
-    { id: 'tpl-exp',  label: '{x} explicado',     wrap: x => `${x} explicado` },
-    { id: 'tpl-how',  label: 'cómo hacer {x}',     wrap: x => `cómo hacer ${x}` },
-    { id: 'tpl-beg',  label: '{x} for beginners',  wrap: x => `${x} for beginners` },
-    { id: 'tpl-bad',  label: '{x} pero mal',       wrap: x => `${x} pero mal` },
-    { id: 'tpl-asmr', label: '{x} asmr',           wrap: x => `${x} asmr` },
+    { id: 'tpl-exp',  label: '{x} explicado',    wrap: x => `${x} explicado` },
+    { id: 'tpl-how',  label: 'cómo hacer {x}',   wrap: x => `cómo hacer ${x}` },
+    { id: 'tpl-beg',  label: '{x} for beginners', wrap: x => `${x} for beginners` },
+    { id: 'tpl-bad',  label: '{x} pero mal',     wrap: x => `${x} pero mal` },
+    { id: 'tpl-asmr', label: '{x} asmr',         wrap: x => `${x} asmr` },
+    { id: 'tpl-real', label: '{x} a las 3am',    wrap: x => `${x} a las 3am` },
   ];
 
   // ───────────────────────── reservorios ─────────────────────────
@@ -85,66 +114,89 @@
   const RESERVORIOS = [
     // ── live ──
     { id: 'wikipedia', label: 'wikipedia', kind: 'live', async run() {
-        const lang = wikiLangChoice();
-        const d = await getJSON(`https://${lang}.wikipedia.org/api/rest_v1/page/random/summary`);
+        const d = await getJSON(`https://${wikiLangChoice()}.wikipedia.org/api/rest_v1/page/random/summary`);
         return clean(d && d.title);
       } },
     { id: 'wikiglobal', label: 'wiki global', kind: 'live', async run() {
-        const lang = pick(WIKI_LANGS);
-        const d = await getJSON(`https://${lang}.wikipedia.org/api/rest_v1/page/random/summary`);
+        const d = await getJSON(`https://${pick(WIKI_LANGS)}.wikipedia.org/api/rest_v1/page/random/summary`);
         return clean(d && d.title);
       } },
     { id: 'wikcionario', label: 'wikcionario', kind: 'live', async run() {
-        const lang = wikiLangChoice();
-        const d = await getJSON(`https://${lang}.wiktionary.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`);
-        return clean(d && d.query && d.query.random && d.query.random[0] && d.query.random[0].title);
+        const d = await getJSON(`https://${wikiLangChoice()}.wiktionary.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`);
+        return clean(d?.query?.random?.[0]?.title);
       } },
     { id: 'commons', label: 'commons', kind: 'live', async run() {
         const d = await getJSON('https://commons.wikimedia.org/w/api.php?action=query&list=random&rnnamespace=6&rnlimit=1&format=json&origin=*');
-        let t = d && d.query && d.query.random && d.query.random[0] && d.query.random[0].title;
+        let t = d?.query?.random?.[0]?.title;
         if (!t) return null;
-        t = t.replace(/^File:/i, '').replace(/\.[a-z0-9]{2,4}$/i, ''); // quita File: y extensión
-        return clean(t);
+        return clean(t.replace(/^File:/i, '').replace(/\.[a-z0-9]{2,4}$/i, '')); // quita File: y extensión
       } },
     { id: 'poesia', label: 'poesía', kind: 'live', async run() {
         const d = await getJSON('https://poetrydb.org/random');
-        const poem = d && d[0] && Array.isArray(d[0].lines) ? d[0].lines.filter(l => l && l.trim()) : [];
-        return poem.length ? clean(pick(poem)) : null;
+        const lineas = Array.isArray(d?.[0]?.lines) ? d[0].lines.filter(l => l && l.trim()) : [];
+        return lineas.length ? clean(pick(lineas)) : null;
       } },
     { id: 'especie', label: 'especie', kind: 'live', async run() {
-        const offset = rnd(9000);
-        const d = await getJSON(`https://api.gbif.org/v1/species/search?rank=SPECIES&status=ACCEPTED&limit=1&offset=${offset}`);
-        const r = d && d.results && d.results[0];
+        const d = await getJSON(`https://api.gbif.org/v1/species/search?rank=SPECIES&status=ACCEPTED&limit=1&offset=${rnd(9000)}`);
+        const r = d?.results?.[0];
         return clean(r && (r.canonicalName || r.scientificName));
+      } },
+    { id: 'museo', label: 'museo', kind: 'live', async run() {
+        // Met Museum: ids dispersos con huecos → probamos varios y dejamos que el fallback cubra el resto
+        for (let i = 0; i < 3; i++) {
+          try {
+            const d = await getJSON(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${1 + rnd(850000)}`, 5000, 0);
+            const t = clean(d && (d.title || d.objectName));
+            if (t) return t;
+          } catch { /* id vacío, probamos otro */ }
+        }
+        return null;
       } },
 
     // ── local (nunca fallan) ──
     { id: 'rarezas', label: 'rarezas', kind: 'local', run() { return pick(RAREZAS); } },
     { id: 'caos', label: 'caos', kind: 'local', run() {
-        const c = pick(CAOS);
-        return Math.random() < 0.25 ? '0x' + hex(rnd(3) + 2) : c;
+        const r = Math.random();
+        if (r < 0.18) return '0x' + hex(rnd(3) + 2);
+        if (r < 0.30) return 'error ' + (rnd(900) + 100);
+        return pick(CAOS);
       } },
     { id: 'coordenadas', label: 'coordenadas', kind: 'local', run() {
-        return rfloat(-90, 90).toFixed(2) + ' ' + rfloat(-180, 180).toFixed(2);
+        const lat = rfloat(-90, 90), lon = rfloat(-180, 180);
+        if (Math.random() < 0.4) {  // formato cardinal de vez en cuando
+          const ns = lat >= 0 ? 'N' : 'S', ew = lon >= 0 ? 'E' : 'W';
+          return `${Math.abs(lat).toFixed(2)}°${ns} ${Math.abs(lon).toFixed(2)}°${ew}`;
+        }
+        return `${lat.toFixed(2)} ${lon.toFixed(2)}`;
       } },
-    { id: 'efemeride', label: 'efeméride', kind: 'local', run() { return String(1500 + rnd(521)); } },
+    { id: 'efemeride', label: 'efeméride', kind: 'local', run() {
+        const y = 1500 + rnd(521);
+        return Math.random() < 0.5 ? String(y) : `año ${y}`;
+      } },
     { id: 'catalogo', label: 'catálogo', kind: 'local', run() {
         const p = pick(CAT_PREFIX);
         const n = rnd(2) ? rnd(900) + 1 : rnd(9000) + 100;
-        return `${p}${/[.\-]$/.test(p) ? '' : ' '}${n}`;
+        return `${p}${/[.\-:]$/.test(p) ? '' : ' '}${n}`;
       } },
     { id: 'emoji', label: 'emoji', kind: 'local', run() {
-        const n = 2 + rnd(3);
-        let s = '';
+        let s = ''; const n = 2 + rnd(3);
         for (let i = 0; i < n; i++) s += pick(EMOJIS);
         return s;
+      } },
+    { id: 'frecuencia', label: 'frecuencia', kind: 'local', run() {
+        const r = Math.random();
+        if (r < 0.4) return pick(ESTACIONES);
+        if (r < 0.7) return `${1500 + rnd(28000)} kHz`;
+        // grupo de cifras estilo estación de números
+        let g = []; for (let i = 0; i < 5; i++) g.push(rnd(10));
+        return g.join(' ');
       } },
   ];
 
   function wikiLangChoice() {
     const v = ($('#wikiLang') || {}).value || 'es';
-    if (v === 'mix') return pick(['es', 'en']);
     if (state.mut['idioma-random']) return pick(WIKI_LANGS);
+    if (v === 'mix') return pick(['es', 'en']);
     return v;
   }
 
@@ -158,61 +210,65 @@
     { id: 'idioma-random', label: 'idioma aleatorio' },
   ];
 
-  // Datamuse helpers (deriva / antónimo)
+  // Datamuse (deriva / antónimo) — devuelve lista de palabras o null
   async function datamuse(rel, word) {
-    const w = (word || '').split(/\s+/).slice(0, 2).join(' '); // 1-2 palabras
+    const w = clean(word).split(/\s+/).slice(0, 2).join(' ');
     if (!w) return null;
-    const url = `https://api.datamuse.com/words?${rel}=${encodeURIComponent(w)}&max=16`;
-    const d = await getJSON(url, 6000);
-    if (!Array.isArray(d) || !d.length) return null;
-    return d;
+    const d = await getJSON(`https://api.datamuse.com/words?${rel}=${encodeURIComponent(w)}&max=16`, 6000);
+    return Array.isArray(d) && d.length ? d : null;
   }
+  const elegirPalabra = d => clean(pick(d.slice(0, 8)).word);
 
   // ───────────────────────── estado ─────────────────────────
-  const LS_HISTORY = 'infectar.history.v1';
-  const LS_POOL    = 'infectar.pool.v1';
-  const LS_MUT     = 'infectar.mut.v1';
-  const LS_TPL     = 'infectar.tpl.v1';
+  const LS = { history: 'infectar.history.v1', pool: 'infectar.pool.v1',
+               mut: 'infectar.mut.v1', tpl: 'infectar.tpl.v1', noglitch: 'infectar.noglitch' };
 
   const state = {
-    pool: store.get(LS_POOL, null),   // {id:bool} — null = todas activas
-    mut:  store.get(LS_MUT, {}),      // {id:bool}
-    tpl:  store.get(LS_TPL, {}),      // {id:bool}
-    current: null,                    // {term, parts:[{txt,type}], source}
-    history: store.get(LS_HISTORY, []),
-    auto: false,
-    autoTimer: null,
+    pool: store.get(LS.pool, null),   // {id:bool} — null = todas activas
+    mut:  store.get(LS.mut, {}),      // {id:bool}
+    tpl:  store.get(LS.tpl, {}),      // {id:bool}
+    current: null,                    // muestra mostrada {term, parts, source}
+    next: null,                       // Promise de la siguiente muestra (prefetch)
+    history: store.get(LS.history, []),
+    seen: [],                         // memoria de términos recientes (anti-repe)
+    lastSourceId: null,               // anti-racha de fuente
+    auto: false, autoEndTs: 0, autoSecs: 8, autoTimer: null,
     generating: false,
   };
-  // por defecto: TODAS las fuentes activas
   if (!state.pool) { state.pool = {}; RESERVORIOS.forEach(r => state.pool[r.id] = true); }
 
   const activePool = () => RESERVORIOS.filter(r => state.pool[r.id]);
+  const locales    = () => RESERVORIOS.filter(r => r.kind === 'local');
+
+  // elige reservorio evitando repetir el de la tirada anterior
+  function elegirFuente() {
+    let pool = activePool();
+    if (!pool.length) pool = locales();
+    if (pool.length > 1 && state.lastSourceId) {
+      const sinRepe = pool.filter(r => r.id !== state.lastSourceId);
+      if (sinRepe.length) pool = sinRepe;
+    }
+    return pick(pool);
+  }
 
   // ───────────────────────── generación de muestra ─────────────────────────
   // Devuelve {term, parts, source}. parts = chips para preview.
-  async function sample() {
-    const actives = activePool();
-    const fuente = actives.length ? pick(actives) : pick(RESERVORIOS.filter(r => r.kind === 'local'));
+  async function sample(intento = 0) {
+    const fuente = elegirFuente();
+    state.lastSourceId = fuente.id;
 
     let base = null, source = fuente.label;
-    try {
-      base = await fuente.run();
-    } catch (e) {
-      base = null;
-    }
-    // fallback: si falló (live caído / vacío), cae a un reservorio local
-    if (!base) {
-      const fb = pick(RESERVORIOS.filter(r => r.kind === 'local'));
+    try { base = await fuente.run(); } catch { base = null; }
+    if (!base) {                       // live caído/vacío → cae a un local
+      const fb = pick(locales());
       base = fb.run();
       source = fb.label + '↩';
     }
     base = clean(base) || pick(RAREZAS); // garantía absoluta: nunca vacío
 
-    const parts = [{ txt: base, type: 'base' }];
+    let parts = [{ txt: base, type: 'base' }];
     let term = base;
 
-    // ── mutágenos (orden: deriva/antónimo transforman; formato/año/mashup añaden) ──
     // deriva ×N — saltos semánticos encadenados
     if (state.mut['deriva']) {
       const n = parseInt(($('#derivaN') || {}).value || '1', 10);
@@ -221,13 +277,12 @@
         for (let i = 0; i < n; i++) {
           const d = await datamuse('ml', w);
           if (!d) break;
-          // coge uno de los primeros (los más relacionados) con algo de azar
-          w = clean(pick(d.slice(0, Math.min(8, d.length))).word);
-          if (!w) break;
+          const sig = elegirPalabra(d);
+          if (!sig) break;
+          w = sig;
         }
-        if (w && w.toLowerCase() !== term.toLowerCase()) {
-          term = w; parts.length = 0; parts.push({ txt: term, type: 'base' });
-          parts.push({ txt: `deriva ×${n}`, type: 'mut' });
+        if (w && norm(w) !== norm(term)) {
+          term = w; parts = [{ txt: term, type: 'base' }, { txt: `deriva ×${n}`, type: 'mut' }];
         }
       } catch { /* deriva es opcional */ }
     }
@@ -236,51 +291,50 @@
     if (state.mut['antonimo']) {
       try {
         const d = await datamuse('rel_ant', term);
-        if (d) {
-          const ant = clean(pick(d.slice(0, Math.min(8, d.length))).word);
-          if (ant) { term = ant; parts.length = 0; parts.push({ txt: term, type: 'base' }); parts.push({ txt: 'antónimo', type: 'mut' }); }
-        }
+        const ant = d && elegirPalabra(d);
+        if (ant) { term = ant; parts = [{ txt: term, type: 'base' }, { txt: 'antónimo', type: 'mut' }]; }
       } catch { /* opcional */ }
     }
 
-    // formato — concatena palabra-formato
+    // formato
     if (state.mut['formato']) {
-      const f = pick(FORMATOS);
-      term += ' ' + f;
-      parts.push({ txt: f, type: 'mut' });
+      const f = pick(FORMATOS); term += ' ' + f; parts.push({ txt: f, type: 'mut' });
     }
-
     // año/década
     if (state.mut['anodecada']) {
       const v = Math.random() < 0.5 ? String(1955 + rnd(62)) : pick(DECADAS);
-      term += ' ' + v;
-      parts.push({ txt: v, type: 'mut' });
+      term += ' ' + v; parts.push({ txt: v, type: 'mut' });
     }
-
-    // mash-up — término de OTRO reservorio (choque de mundos)
+    // mash-up — término de OTRO reservorio (choque de mundos; prioriza locales)
     if (state.mut['mashup']) {
-      const others = RESERVORIOS.filter(r => r.id !== fuente.id);
+      const otros = [...locales(), ...activePool().filter(r => r.kind === 'live')]
+        .filter(r => r.id !== fuente.id);
       let extra = null;
-      // intenta primero locales para no depender de red en el mash-up
-      const localsFirst = others.filter(r => r.kind === 'local').concat(others.filter(r => r.kind === 'live'));
-      for (const r of localsFirst) {
+      for (const r of otros) {
         try { extra = clean(await r.run()); } catch { extra = null; }
         if (extra) break;
       }
       if (extra) { term += ' ' + extra; parts.push({ txt: extra, type: 'mut' }); }
     }
 
-    // ── plantillas de query (envuelven el resultado final) ──
+    // plantillas (envuelven el resultado final)
     const tplsOn = PLANTILLAS.filter(t => state.tpl[t.id]);
     if (tplsOn.length) {
-      const tpl = pick(tplsOn);
-      term = tpl.wrap(term);
-      parts.push({ txt: tpl.label, type: 'tpl' });
+      const tpl = pick(tplsOn); term = tpl.wrap(term); parts.push({ txt: tpl.label, type: 'tpl' });
     }
 
+    term = clean(term);
+
+    // anti-repetición: si ya salió hace poco, re-tira (con tope de intentos)
+    if (intento < 3 && state.seen.includes(norm(term))) return sample(intento + 1);
+
     parts.push({ txt: source, type: 'fuente' });
-    return { term: clean(term), parts, source };
+    return { term, parts, source };
   }
+
+  // ── prefetch: la siguiente muestra se cocina en segundo plano ──
+  function prefetchNext() { state.next = sample().catch(() => null); }
+  function invalidarPrefetch() { state.next = null; }
 
   // ───────────────────────── render ─────────────────────────
   const ytURL = q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
@@ -290,16 +344,20 @@
   const depthEl  = $('#depth');
   const tunnelEl = $('#tunnel');
 
+  function recordarSeen(term) {
+    state.seen.push(norm(term));
+    if (state.seen.length > 60) state.seen.shift();
+  }
+
   function renderPreview(s) {
     state.current = s;
+    recordarSeen(s.term);
     termEl.classList.remove('idle');
     termEl.textContent = s.term;
     termEl.href = ytURL(s.term);
-    // glitch sutil (si no está bloqueado)
     if (!document.body.classList.contains('no-glitch')) {
       termEl.classList.remove('glitch'); void termEl.offsetWidth; termEl.classList.add('glitch');
     }
-    // chips de componentes
     chipsEl.innerHTML = '';
     s.parts.forEach(p => {
       const c = document.createElement('span');
@@ -311,138 +369,120 @@
 
   function setBusy(busy) {
     state.generating = busy;
-    if (busy && !state.current) { termEl.classList.add('idle'); termEl.textContent = 'recombinando…'; termEl.removeAttribute('href'); }
+    document.body.classList.toggle('busy', busy);
+    if (busy && !state.current) { termEl.classList.add('idle'); termEl.textContent = '·· tirando del azar'; termEl.removeAttribute('href'); }
   }
 
+  // genera y muestra. Usa el prefetch si está listo (→ instantáneo), si no, tira en vivo.
   async function recombinar() {
     if (state.generating) return;
     setBusy(true);
     try {
-      const s = await sample();
+      let s = state.next ? await state.next : null;
+      state.next = null;
+      if (!s) s = await sample();
       renderPreview(s);
-    } catch (e) {
-      // fallback duro
+    } catch {
       const b = pick(RAREZAS);
       renderPreview({ term: b, parts: [{ txt: b, type: 'base' }, { txt: 'rarezas↩', type: 'fuente' }], source: 'rarezas↩' });
     } finally {
       setBusy(false);
+      prefetchNext(); // deja lista la siguiente
     }
   }
 
   // ───────────────────────── inyectar ─────────────────────────
-  function infectar() {
+  // reuse=true reutiliza una sola pestaña (auto-infectar); false abre una nueva (manual)
+  function infectar(reuse = false) {
     if (!state.current || !state.current.term) { recombinar(); return; }
     const s = state.current;
-    // abre la búsqueda de YouTube en pestaña nueva (tu sesión logueada)
-    window.open(ytURL(s.term), '_blank', 'noopener');
+    window.open(ytURL(s.term), reuse ? 'infectar_yt' : '_blank', 'noopener');
     pushHistory(s);
-    recombinar(); // autogenera la siguiente muestra
+    recombinar();
   }
 
   // ───────────────────────── descenso / historial ─────────────────────────
   function pushHistory(s) {
-    const entry = {
-      term: s.term,
-      source: s.source,
-      t: Date.now(),
-    };
-    state.history.unshift(entry); // el más reciente arriba del túnel
+    state.history.unshift({ term: s.term, source: s.source, t: Date.now() });
     if (state.history.length > 300) state.history.length = 300;
-    store.set(LS_HISTORY, state.history);
+    store.set(LS.history, state.history);
     renderHistory(true);
     updateDepth();
   }
 
-  function hhmm(ts) {
-    const d = new Date(ts);
-    const p = n => String(n).padStart(2, '0');
-    return `${p(d.getHours())}:${p(d.getMinutes())}`;
-  }
+  const hhmm = ts => { const d = new Date(ts), p = n => String(n).padStart(2, '0'); return `${p(d.getHours())}:${p(d.getMinutes())}`; };
+  const ESCAPE = { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' };
+  const escapeHTML = s => (s || '').replace(/[&<>"']/g, c => ESCAPE[c]);
 
   function renderHistory(fresh) {
     const n = state.history.length;
     $('#descensoActions').hidden = n === 0;
-    const sub = $('#descensoCount');
-    sub.textContent = n === 0
-      ? 'vacía — aún no has inyectado nada'
-      : `${n} ${n === 1 ? 'inyección' : 'inyecciones'} · cae más con la profundidad`;
+    $('#descensoCount').textContent = n === 0
+      ? 'vacía · todavía no has soltado nada aquí abajo'
+      : `${n} ${n === 1 ? 'inyección' : 'inyecciones'} · se hunden con la profundidad`;
 
     tunnelEl.innerHTML = '';
     state.history.forEach((e, i) => {
       const li = document.createElement('li');
       li.className = 'node' + (fresh && i === 0 ? ' fresh' : '');
-      // se hunde: más pequeño y más tenue con la profundidad
-      const depth = i;
-      const scale = Math.max(0.5, 1 - depth * 0.045);
-      const opacity = Math.max(0.18, 1 - depth * 0.07);
-      const fontSize = 34 * scale; // base 34px, se encoge con la profundidad
-      li.style.opacity = opacity.toFixed(2);
+      const scale = Math.max(0.5, 1 - i * 0.045);
+      li.style.opacity = Math.max(0.18, 1 - i * 0.07).toFixed(2);
 
       const a = document.createElement('a');
       a.className = 'node-term';
-      a.href = ytURL(e.term);
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
+      a.href = ytURL(e.term); a.target = '_blank'; a.rel = 'noopener noreferrer';
       a.textContent = e.term;
-      a.style.fontSize = fontSize.toFixed(1) + 'px';
+      a.style.fontSize = (34 * scale).toFixed(1) + 'px';
 
       const meta = document.createElement('div');
       meta.className = 'node-meta';
-      const idx = String(n - i).padStart(2, '0');
-      meta.innerHTML = `-${idx} <span class="sep">◈</span> ${escapeHTML(e.source)} <span class="sep">◈</span> ${hhmm(e.t)}`;
+      meta.innerHTML = `-${String(n - i).padStart(2, '0')} <span class="sep">◈</span> ${escapeHTML(e.source)} <span class="sep">◈</span> ${hhmm(e.t)}`;
 
-      li.appendChild(a);
-      li.appendChild(meta);
+      li.append(a, meta);
       tunnelEl.appendChild(li);
     });
   }
 
-  const escapeHTML = s => (s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-
-  function updateDepth() {
-    const n = state.history.length;
-    depthEl.textContent = '-' + String(n).padStart(2, '0');
-  }
+  const updateDepth = () => { depthEl.textContent = '-' + String(state.history.length).padStart(2, '0'); };
 
   // exportar rastro → markdown al portapapeles
   async function exportar() {
-    if (!state.history.length) { toast('la madriguera está vacía'); return; }
-    const lines = [
-      '# INFECTAR — rastro de la madriguera',
-      '',
-      `> ${state.history.length} inyecciones · confía en tus amigas, no en el algoritmo`,
-      '',
-    ];
+    if (!state.history.length) { toast('aún no hay rastro que llevarse'); return; }
+    const lines = ['# INFECTAR — rastro de la madriguera', '',
+      `> ${state.history.length} inyecciones · confía en tus amigas, no en el algoritmo`, ''];
     state.history.forEach((e, i) => {
-      const idx = String(state.history.length - i).padStart(2, '0');
-      lines.push(`- \`-${idx}\` **${e.term}** — _${e.source}_ · ${new Date(e.t).toISOString()}`);
+      lines.push(`- \`-${String(state.history.length - i).padStart(2, '0')}\` **${e.term}** — _${e.source}_ · ${new Date(e.t).toISOString()}`);
       lines.push(`  - ${ytURL(e.term)}`);
     });
     lines.push('', '— Queimada Circuit Records · LAB · INFECTAR');
     const md = lines.join('\n');
     try {
       await navigator.clipboard.writeText(md);
-      toast('rastro copiado al portapapeles (markdown)');
+      toast('rastro al portapapeles ✓');
     } catch {
-      // fallback: textarea + execCommand
       const ta = document.createElement('textarea');
       ta.value = md; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); toast('rastro copiado'); }
-      catch { toast('no se pudo copiar — revisa permisos'); }
+      try { document.execCommand('copy'); toast('rastro al portapapeles ✓'); }
+      catch { toast('no me deja copiar — mira los permisos'); }
       ta.remove();
     }
   }
 
-  // colapsar el pozo (borra historial, con confirmación)
-  function colapsar() {
+  // colapsar el pozo (borra historial) con diálogo propio
+  async function colapsar() {
     if (!state.history.length) return;
-    if (!confirm('¿Colapsar el pozo? Esto borra toda la madriguera (no se puede deshacer).')) return;
+    const ok = await dialogo({
+      titulo: 'colapsar el pozo',
+      cuerpo: 'esto borra toda la madriguera. no hay vuelta atrás.',
+      si: 'colapsar', no: 'déjalo', peligro: true,
+    });
+    if (!ok) return;
     state.history = [];
-    store.set(LS_HISTORY, state.history);
+    store.set(LS.history, state.history);
     renderHistory(false);
     updateDepth();
-    toast('pozo colapsado');
+    toast('pozo colapsado. a empezar de cero.');
   }
 
   // ───────────────────────── auto-infectar ─────────────────────────
@@ -450,54 +490,93 @@
     state.auto = !state.auto;
     const btn = $('#btnAuto');
     btn.setAttribute('aria-pressed', String(state.auto));
-    btn.textContent = state.auto ? 'auto ■' : 'auto ▷';
     if (state.auto) {
-      toast('auto-infectar ON — el navegador puede bloquear pop-ups encadenados');
-      scheduleAuto();
+      toast('auto on · reutiliza una pestaña, no te llena de pestañas');
+      armarAuto();
+      tickAuto();
     } else {
-      clearTimeout(state.autoTimer);
+      pararAuto();
     }
   }
-  function scheduleAuto() {
-    clearTimeout(state.autoTimer);
-    const secs = parseInt(($('#autoSecs') || {}).value || '8', 10);
-    state.autoTimer = setTimeout(() => {
-      if (!state.auto) return;
-      infectar();
-      scheduleAuto();
-    }, secs * 1000);
+  function pararAuto() {
+    clearInterval(state.autoTimer); state.autoTimer = null;
+    const btn = $('#btnAuto');
+    btn.textContent = 'auto ▷';
+    btn.style.removeProperty('--p');
+  }
+  function armarAuto() {
+    state.autoSecs = parseInt(($('#autoSecs') || {}).value || '8', 10);
+    state.autoEndTs = Date.now() + state.autoSecs * 1000;
+  }
+  function tickAuto() {
+    clearInterval(state.autoTimer);
+    const btn = $('#btnAuto');
+    state.autoTimer = setInterval(() => {
+      if (!state.auto) return pararAuto();
+      const queda = state.autoEndTs - Date.now();
+      btn.textContent = 'auto ■ ' + Math.max(0, Math.ceil(queda / 1000));
+      btn.style.setProperty('--p', (100 * (1 - queda / (state.autoSecs * 1000))).toFixed(0) + '%');
+      if (queda <= 0) { infectar(true); armarAuto(); }
+    }, 200);
+  }
+
+  // ───────────────────────── diálogo propio (estilo QCR, no el del navegador) ─────────────────────────
+  let dlgPrev = null;
+  function dialogo({ titulo, cuerpo, si = 'sí', no = 'no', peligro = false }) {
+    return new Promise(resolve => {
+      dlgPrev = document.activeElement;
+      const ov = document.createElement('div');
+      ov.className = 'dlg-ov';
+      ov.innerHTML = `
+        <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgT" aria-describedby="dlgB">
+          <p class="dlg-t" id="dlgT"><span class="sep">◈</span> ${escapeHTML(titulo)}</p>
+          <p class="dlg-b" id="dlgB">${escapeHTML(cuerpo)}</p>
+          <div class="dlg-row">
+            <button class="btn btn-ghost dlg-no" type="button">${escapeHTML(no)}</button>
+            <button class="btn ${peligro ? 'btn-ghost danger' : 'btn-main'} dlg-si" type="button">${escapeHTML(si)}</button>
+          </div>
+        </div>`;
+      const cerrar = (val) => {
+        ov.classList.remove('show');
+        setTimeout(() => ov.remove(), 180);
+        document.removeEventListener('keydown', onKey, true);
+        if (dlgPrev && dlgPrev.focus) dlgPrev.focus();
+        resolve(val);
+      };
+      const onKey = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); cerrar(false); }
+        if (e.key === 'Enter')  { e.preventDefault(); cerrar(true); }
+      };
+      ov.querySelector('.dlg-si').addEventListener('click', () => cerrar(true));
+      ov.querySelector('.dlg-no').addEventListener('click', () => cerrar(false));
+      ov.addEventListener('mousedown', (e) => { if (e.target === ov) cerrar(false); });
+      document.addEventListener('keydown', onKey, true);
+      document.body.appendChild(ov);
+      requestAnimationFrame(() => { ov.classList.add('show'); ov.querySelector('.dlg-si').focus(); });
+    });
   }
 
   // ───────────────────────── toast ─────────────────────────
   let toastTimer = null;
   function toast(msg) {
     const el = $('#toast');
-    el.textContent = msg;
-    el.hidden = false;
+    el.textContent = msg; el.hidden = false;
     requestAnimationFrame(() => el.classList.add('show'));
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      el.classList.remove('show');
-      setTimeout(() => { el.hidden = true; }, 250);
-    }, 2600);
+    toastTimer = setTimeout(() => { el.classList.remove('show'); setTimeout(() => { el.hidden = true; }, 250); }, 2600);
   }
 
-  // ───────────────────────── construir toggles UI ─────────────────────────
-  function buildToggle(opts) {
-    // opts: {id, label, pressed, kind?, cls?}
+  // ───────────────────────── toggles UI ─────────────────────────
+  function buildToggle({ id, label, pressed, kind, cls }) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'toggle' + (opts.cls ? ' ' + opts.cls : '') + (opts.kind ? ' ' + opts.kind : '');
-    b.setAttribute('aria-pressed', String(!!opts.pressed));
-    b.dataset.id = opts.id;
-    const mark = document.createElement('span');
-    mark.className = 'mark';
-    mark.textContent = opts.pressed ? '◈' : '◇';
-    const txt = document.createElement('span');
-    txt.textContent = opts.label;
-    b.appendChild(mark);
-    b.appendChild(txt);
-    if (opts.kind) { const badge = document.createElement('span'); badge.className = 'badge'; b.appendChild(badge); }
+    b.className = 'toggle' + (cls ? ' ' + cls : '') + (kind ? ' ' + kind : '');
+    b.setAttribute('aria-pressed', String(!!pressed));
+    b.dataset.id = id;
+    const mark = document.createElement('span'); mark.className = 'mark'; mark.textContent = pressed ? '◈' : '◇';
+    const txt = document.createElement('span'); txt.textContent = label;
+    b.append(mark, txt);
+    if (kind) { const badge = document.createElement('span'); badge.className = 'badge'; b.append(badge); }
     return b;
   }
   function syncToggle(b, pressed) {
@@ -505,120 +584,83 @@
     b.querySelector('.mark').textContent = pressed ? '◈' : '◇';
   }
 
-  function buildPoolUI() {
-    const wrap = $('#poolToggles');
-    wrap.innerHTML = '';
-    RESERVORIOS.forEach(r => {
-      const b = buildToggle({ id: r.id, label: r.label, pressed: !!state.pool[r.id], kind: r.kind });
+  function buildToggleGroup(sel, items, stateMap, lsKey, { cls, refresh } = {}) {
+    const wrap = $(sel); wrap.innerHTML = '';
+    items.forEach(it => {
+      const b = buildToggle({ id: it.id, label: it.label, pressed: !!stateMap[it.id], kind: it.kind, cls });
       b.addEventListener('click', () => {
-        state.pool[r.id] = !state.pool[r.id];
-        syncToggle(b, state.pool[r.id]);
-        store.set(LS_POOL, state.pool);
+        stateMap[it.id] = !stateMap[it.id];
+        syncToggle(b, stateMap[it.id]);
+        store.set(lsKey, stateMap);
+        if (refresh) { invalidarPrefetch(); recombinar(); }
       });
       wrap.appendChild(b);
     });
   }
-  function refreshPoolUI() {
+
+  // atajos del pool
+  function setPool(fn) {
+    RESERVORIOS.forEach(r => state.pool[r.id] = fn(r));
     $$('#poolToggles .toggle').forEach(b => syncToggle(b, !!state.pool[b.dataset.id]));
+    store.set(LS.pool, state.pool);
+    invalidarPrefetch();
   }
-
-  function buildMutUI() {
-    const wrap = $('#mutToggles');
-    wrap.innerHTML = '';
-    MUTAGENOS.forEach(m => {
-      const b = buildToggle({ id: m.id, label: m.label, pressed: !!state.mut[m.id], cls: 'mut' });
-      b.addEventListener('click', () => {
-        state.mut[m.id] = !state.mut[m.id];
-        syncToggle(b, state.mut[m.id]);
-        store.set(LS_MUT, state.mut);
-        recombinar(); // refleja el cambio en la preview
-      });
-      wrap.appendChild(b);
-    });
-  }
-
-  function buildTplUI() {
-    const wrap = $('#tplToggles');
-    wrap.innerHTML = '';
-    PLANTILLAS.forEach(t => {
-      const b = buildToggle({ id: t.id, label: t.label, pressed: !!state.tpl[t.id], cls: 'mut' });
-      b.addEventListener('click', () => {
-        state.tpl[t.id] = !state.tpl[t.id];
-        syncToggle(b, state.tpl[t.id]);
-        store.set(LS_TPL, state.tpl);
-        recombinar();
-      });
-      wrap.appendChild(b);
-    });
-  }
-
-  // ───────────────────────── atajos del pool ─────────────────────────
-  function poolAll()   { RESERVORIOS.forEach(r => state.pool[r.id] = true);  refreshPoolUI(); store.set(LS_POOL, state.pool); }
-  function poolNone()  { RESERVORIOS.forEach(r => state.pool[r.id] = false); refreshPoolUI(); store.set(LS_POOL, state.pool); }
-  function poolLocal() { RESERVORIOS.forEach(r => state.pool[r.id] = (r.kind === 'local')); refreshPoolUI(); store.set(LS_POOL, state.pool); }
 
   // ───────────────────────── eventos ─────────────────────────
   function wire() {
-    $('#btnInfectar').addEventListener('click', infectar);
+    $('#btnInfectar').addEventListener('click', () => infectar(false));
     $('#btnRecombinar').addEventListener('click', recombinar);
     $('#btnAuto').addEventListener('click', toggleAuto);
     $('#btnExport').addEventListener('click', exportar);
     $('#btnCollapse').addEventListener('click', colapsar);
 
-    $('[data-pool-all]').addEventListener('click', poolAll);
-    $('[data-pool-none]').addEventListener('click', poolNone);
-    $('[data-pool-local]').addEventListener('click', poolLocal);
+    $('[data-pool-all]').addEventListener('click',   () => setPool(() => true));
+    $('[data-pool-none]').addEventListener('click',  () => setPool(() => false));
+    $('[data-pool-local]').addEventListener('click', () => setPool(r => r.kind === 'local'));
 
-    // sliders con output
     const derivaN = $('#derivaN'), derivaOut = $('#derivaOut');
-    derivaN.addEventListener('input', () => derivaOut.textContent = '×' + derivaN.value);
+    derivaN.addEventListener('input', () => { derivaOut.textContent = '×' + derivaN.value; invalidarPrefetch(); });
     const autoSecs = $('#autoSecs'), autoOut = $('#autoOut');
-    autoSecs.addEventListener('input', () => { autoOut.textContent = autoSecs.value + 's'; if (state.auto) scheduleAuto(); });
+    autoSecs.addEventListener('input', () => { autoOut.textContent = autoSecs.value + 's'; if (state.auto) armarAuto(); });
 
-    // idioma wikipedia → refresca preview si el reservorio actual depende
-    $('#wikiLang').addEventListener('change', recombinar);
+    $('#wikiLang').addEventListener('change', () => { invalidarPrefetch(); recombinar(); });
 
-    // toggle "sin glitch"
     const rg = $('#reduceGlitch');
-    rg.checked = store.get('infectar.noglitch', false);
+    rg.checked = store.get(LS.noglitch, false);
     document.body.classList.toggle('no-glitch', rg.checked);
     rg.addEventListener('change', () => {
       document.body.classList.toggle('no-glitch', rg.checked);
-      store.set('infectar.noglitch', rg.checked);
+      store.set(LS.noglitch, rg.checked);
     });
 
-    // teclado: espacio = inyectar (salvo dentro de inputs/controles)
+    // teclado
     document.addEventListener('keydown', (e) => {
+      if ($('.dlg-ov')) return; // el diálogo gestiona sus teclas
       const tag = (e.target.tagName || '').toLowerCase();
       const editable = ['input','select','textarea','button','summary'].includes(tag) || e.target.isContentEditable;
-      if (e.code === 'Space' && !editable) {
-        e.preventDefault();
-        infectar();
-      }
-      if (e.key.toLowerCase() === 'r' && !editable) { recombinar(); }
+      if (editable) return;
+      if (e.code === 'Space') { e.preventDefault(); infectar(false); }
+      else if (e.key.toLowerCase() === 'r') { recombinar(); }
     });
 
-    // término gigante: si lo clicas, también cuenta como inyección en el historial
-    termEl.addEventListener('click', (e) => {
-      if (!state.current) { e.preventDefault(); return; }
+    // clicar el término gigante también cuenta como inyección
+    termEl.addEventListener('click', () => {
+      if (!state.current) return;
       pushHistory(state.current);
-      // dejamos que el navegador abra el href; generamos la siguiente tras un tick
       setTimeout(recombinar, 30);
     });
   }
 
-  // respeta prefers-reduced-motion para el glitch
   function honorReducedMotion() {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (mq.matches) document.body.classList.add('no-glitch');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.body.classList.add('no-glitch');
   }
 
   // ───────────────────────── init ─────────────────────────
   function init() {
     honorReducedMotion();
-    buildPoolUI();
-    buildMutUI();
-    buildTplUI();
+    buildToggleGroup('#poolToggles', RESERVORIOS, state.pool, LS.pool);
+    buildToggleGroup('#mutToggles', MUTAGENOS, state.mut, LS.mut, { cls: 'mut', refresh: true });
+    buildToggleGroup('#tplToggles', PLANTILLAS, state.tpl, LS.tpl, { cls: 'mut', refresh: true });
     wire();
     renderHistory(false);
     updateDepth();
